@@ -8,6 +8,8 @@ function createWindow(): void {
   const mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
+    minWidth: 600,
+    minHeight: 400,
     show: false,
     frame: false,
     visualEffectState: "active",
