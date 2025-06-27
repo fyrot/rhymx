@@ -3,6 +3,19 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 
+function closeWindow(event, shouldClose):void {
+  const window = BrowserWindow.fromWebContents(event.sender);
+  window?.close();
+}
+
+function toggleMaximizeWindow(event):void {
+  const window = BrowserWindow.fromWebContents(event.sender);
+  if (window !== undefined && window !== null) {
+    if (window.isMaximized()) {window.unmaximize()}
+    else {window.maximize();}
+  }
+}
+
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -17,7 +30,7 @@ function createWindow(): void {
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
+      preload: join(__dirname, "../preload/index.js"),
       sandbox: true,
       contextIsolation: true
     }
@@ -56,8 +69,9 @@ app.whenReady().then(() => {
   })
 
   // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
-
+  //ipcMain.on('ping', () => console.log('pong'))
+  ipcMain.on("closeWindow", closeWindow);
+  ipcMain.on("toggleMaximizeWindow", toggleMaximizeWindow);
   createWindow()
 
   app.on('activate', function () {

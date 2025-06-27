@@ -2,7 +2,8 @@ import { useState } from "react"
 import { LuChevronLeft, LuMenu, LuMinus, LuMaximize, LuMinimize, LuX, LuHouse, LuSearch, LuCog, LuSettings } from "react-icons/lu"
 import { useNavigate } from "react-router"
 const NavigationBar = () => {
-  const [menuOpen, setMenuOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false);
+  
   return (
     <div className="w-full draggable-appbar p-2 h-14 z-50 fixed flex flex-row justify-center items-center">
       
@@ -34,10 +35,10 @@ const NavigationBar = () => {
             <LuMinus className="text-xl grow none-draggable-appbar navigation-bar-icon" />
         </div>
         <div className="w-12 mr-2 flex items-center py-2 navigation-bar-icon-bg rounded-full none-draggable-appbar justify-center">
-            <LuMaximize className="text-xl grow  none-draggable-appbar navigation-bar-icon" />
+            <LuMaximize className="text-xl grow  none-draggable-appbar navigation-bar-icon" onClick={() => {console.log("toggling maximization.."); window.electronAPI.toggleMaximizeWindow()}} />
         </div>
         <div className="w-12 flex items-center py-2 navigation-bar-icon-bg rounded-full none-draggable-appbar justify-center">
-            <LuX className="text-xl grow none-draggable-appbar navigation-bar-icon" />
+            <LuX className="text-xl grow none-draggable-appbar navigation-bar-icon" onClick={() => {console.log("closing app.."); window.electronAPI.closeWindow(true);}} />
         </div>
       </div>
     </div>
