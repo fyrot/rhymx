@@ -9,6 +9,52 @@
     html, body {
         @apply h-full;
         @apply select-none;
-        @apply antialiased;
+        @apply antialiased text-white;
     }
+}
+
+@font-face {
+    font-family: "Inter";
+    src: url("./Inter-VariableFont.ttf")
+}
+
+html {
+    font-family: Inter;
+}
+
+.bg-black-translucent {
+    background-color: rgba(12, 12, 12, 0.6);
+    backdrop-filter: blur(2rem);   
+}
+
+.draggable-appbar {
+    app-region: drag;
+}
+.none-draggable-appbar {
+    app-region: no-drag;
+}
+
+.navigation-bar-icon {
+    color: rgba(255, 255, 255, 0.6);
+    user-select: all;
+    transition: all 0.2s ease-out;
+}
+
+.navigation-bar-icon:hover {
+    color: rgba(255, 255, 255, 1.0);
+
+}
+
+.navigation-bar-icon-bg {
+    background-color: transparent;
+}
+.navigation-bar-icon-bg:hover {
+    background-color: rgba(0, 0, 0, 0.5)
+}
+.navigation-bar-menu-icon {
+    transform: rotateZ(0deg);
+    transition: all 0.3s ease-out
+}
+.navigation-bar-menu-icon-opened {
+    transform: rotateZ(90deg);
 }
