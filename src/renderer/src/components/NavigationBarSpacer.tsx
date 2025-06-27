@@ -1,6 +1,6 @@
 const NavigationBarSpacer = () => {
     return (
-        <div className="h-14"></div>
+        <div className="h-14 w-screen"></div>
     )
 }
 

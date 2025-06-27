@@ -40,6 +40,20 @@ function createWindow(): void {
     mainWindow.show()
   })
 
+  mainWindow.on("maximize", () => {
+    mainWindow.webContents.send("windowMaximized");
+  })
+  mainWindow.on("unmaximize", () => {
+    mainWindow.webContents.send("windowUnmaximized");
+    /* 
+    i was wondering why this wasn't working
+    until i realized this used to send the same message
+    as the maximize event
+
+    oops
+    */
+  })
+
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
     return { action: 'deny' }
@@ -89,6 +103,8 @@ app.on('window-all-closed', () => {
     app.quit()
   }
 })
+
+
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.

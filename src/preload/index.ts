@@ -12,7 +12,9 @@ if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electronAPI', {
       closeWindow: (redundant) => {ipcRenderer.send("closeWindow", redundant);},
-      toggleMaximizeWindow: () => {ipcRenderer.send("toggleMaximizeWindow");}
+      toggleMaximizeWindow: () => {ipcRenderer.send("toggleMaximizeWindow");},
+      windowMaximized: (callback) => {ipcRenderer.on("windowMaximized", callback);},
+      windowUnmaximized: (callback) => {ipcRenderer.on("windowUnmaximized", callback);}
     })
   } catch (error) {
     console.log(error);
