@@ -4,7 +4,7 @@ export default function HomePage() {
   return (
     <div>
       <div className="min-h-screen bg-gray-500">
-        <NavigationBarSpacer />
+        <NavigationBarSpacer accentGradient={true} />
         <h1 className="text-4xl font-semibold ml-4">...</h1>
       </div>
     </div>

@@ -16,6 +16,11 @@ function toggleMaximizeWindow(event):void {
   }
 }
 
+function minimizeWindow(event:Electron.IpcMainEvent):void {
+  const window = BrowserWindow.fromWebContents(event.sender);
+  window?.minimize();
+}
+
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -86,6 +91,7 @@ app.whenReady().then(() => {
   //ipcMain.on('ping', () => console.log('pong'))
   ipcMain.on("closeWindow", closeWindow);
   ipcMain.on("toggleMaximizeWindow", toggleMaximizeWindow);
+  ipcMain.on("minimizeWindow", minimizeWindow);
   createWindow()
 
   app.on('activate', function () {

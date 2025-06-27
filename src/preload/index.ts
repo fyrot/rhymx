@@ -14,7 +14,8 @@ if (process.contextIsolated) {
       closeWindow: (redundant) => {ipcRenderer.send("closeWindow", redundant);},
       toggleMaximizeWindow: () => {ipcRenderer.send("toggleMaximizeWindow");},
       windowMaximized: (callback) => {ipcRenderer.on("windowMaximized", callback);},
-      windowUnmaximized: (callback) => {ipcRenderer.on("windowUnmaximized", callback);}
+      windowUnmaximized: (callback) => {ipcRenderer.on("windowUnmaximized", callback);},
+      minimizeWindow: () => {ipcRenderer.send("minimizeWindow");}
     })
   } catch (error) {
     console.log(error);

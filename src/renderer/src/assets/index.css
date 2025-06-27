@@ -18,6 +18,10 @@
     src: url("./Inter-VariableFont.ttf")
 }
 
+:root {
+    --accent-color: #E52B5075
+}
+
 html {
     font-family: Inter;
 }
@@ -57,4 +61,8 @@ html {
 }
 .navigation-bar-menu-icon-opened {
     transform: rotateZ(90deg);
+}
+.navigation-bar-spacer {
+    background: var(--accent-color);
+    background: linear-gradient(180deg, var(--accent-color) 0%, rgba(0, 0, 0, 0) 100%);
 }

@@ -2,7 +2,8 @@ export interface IElectronAPI {
     closeWindow: (shouldClose: boolean) => void,
     toggleMaximizeWindow: () => void,
     windowMaximized: (callback:any) => void,
-    windowUnmaximized: (callback: any) => void
+    windowUnmaximized: (callback: any) => void,
+    minimizeWindow: () => void,
 }
 declare global {
     interface Window {
