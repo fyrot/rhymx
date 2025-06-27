@@ -2,21 +2,39 @@ import { useEffect, useState } from "react"
 import { LuChevronLeft, LuMenu, LuMinus, LuMaximize, LuMinimize, LuX, LuHouse, LuSearch, LuCog, LuSettings } from "react-icons/lu"
 import { useLocation, useNavigate } from "react-router"
 const NavigationBar = () => {
+  type MainNavigation = {
+    name: string,
+    icon: any,
+    href: string
+  }
+  
   const [menuOpen, setMenuOpen] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
   
+  const mainNavigationLinks:MainNavigation[] = [
+    {name: "Home", icon: <LuHouse  />, href: "/"},
+    {name: "Search", icon: <LuSearch />, href: "/search"},
+    {name: "Preferences", icon: <LuSettings  />, href: "/preferences"}
+  ]
+
   const navigation = useNavigate();
   const navigationPosition = useLocation();
   const navigationHistoryExists = !(navigationPosition.key == "default"  || (navigationPosition.pathname == "/" || navigationPosition.pathname == "/preferences"));
   console.log(navigationPosition.pathname);
+  
   useEffect(() => {
     const maximized = () => {setIsMaximized(true);}
     const unmaximized = () => {setIsMaximized(false);}
     window.electronAPI.windowMaximized(maximized);
     window.electronAPI.windowUnmaximized(unmaximized);
   })
+
+  const navigateToPage = (link: string) => {
+    navigation(link);
+  }
+
   const navigateToHome = () => {
-    navigation("/", {replace: true});
+    navigation("/");
   }
   const navigateToPreferences = () => {
     navigation("/preferences");
@@ -39,15 +57,16 @@ const NavigationBar = () => {
             <LuMenu  className={`text-xl grow none-draggable-appbar navigation-bar-icon navigation-bar-menu-icon ${menuOpen ? "navigation-bar-menu-icon-opened" : ""} `} />
         </div>
         <div className={`${menuOpen ? "w-36" : "w-0"} overflow-hidden transition-all duration-300 flex flex-row ease-out`}>
-            <div className="w-12 flex items-center py-2 navigation-bar-icon-bg rounded-full none-draggable-appbar justify-center " onClick={navigateToHome}>
-                <LuHouse className="text-xl grow none-draggable-appbar navigation-bar-icon" />
-            </div>
-            <div className="w-12 flex items-center py-2 navigation-bar-icon-bg rounded-full none-draggable-appbar justify-center ">
-                <LuSearch className="text-xl grow none-draggable-appbar navigation-bar-icon" />
-            </div>
-            <div className="w-12 flex items-center py-2 navigation-bar-icon-bg rounded-full none-draggable-appbar justify-center " onClick={navigateToPreferences}>
-                <LuSettings className="text-xl grow none-draggable-appbar navigation-bar-icon" />
-            </div>
+            
+            <>
+            {mainNavigationLinks.map((link) => (
+              
+              <div onClick={() => {navigateToPage(link.href)}} className="w-12 items-center py-2 navigation-bar-icon-bg rounded-full none-draggable-appbar justify-center flex">
+                <span className={`text-xl grow none-draggable-appbar flex items-center justify-center ${navigationPosition.pathname == link.href ? "text-white" : "navigation-bar-icon"}`}>{link.icon}</span>
+              </div>
+              
+            ))}
+            </>
         </div>
       </div>
       <div className="grow">

@@ -3,6 +3,7 @@ import { MemoryRouter, Routes, Route } from "react-router"
 import NavigationBar from "./components/NavigationBar"
 import HomePage from "./pages/HomePage"
 import PreferencesPage from "./pages/PreferencesPage"
+import PreferencesDisplayPage from "./pages/PreferencesExt/PreferencesDisplayPage"
 function App() {
   return (
     <>
@@ -12,6 +13,7 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/preferences" element={<PreferencesPage />} />
+            <Route path="/preferences/display" element={<PreferencesDisplayPage />} />
           </Routes>
         </div>
         </MemoryRouter>
