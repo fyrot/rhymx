@@ -1,6 +1,6 @@
 import NavigationBarSpacer from "@renderer/components/NavigationBarSpacer"
 import { useNavigate } from "react-router"
-import { LuChevronRight, LuTvMinimal } from "react-icons/lu"
+import { LuChevronRight, LuLibraryBig, LuTvMinimal } from "react-icons/lu"
 export default function PreferencesPage() {
   type PreferenceLink = {
     href: string
@@ -9,7 +9,8 @@ export default function PreferencesPage() {
   }
   const navigation = useNavigate()
   const preferenceLinks: PreferenceLink[] = [
-    { href: "/preferences/display", text: "Display", icon: <LuTvMinimal /> }
+    { href: "/preferences/display", text: "Display", icon: <LuTvMinimal /> },
+    { href: "/preferences/library", text: "Library", icon: <LuLibraryBig />}
   ]
   const navigateToPreference = (link: string) => {
     navigation(link)
@@ -18,17 +19,25 @@ export default function PreferencesPage() {
     <div>
       <div className="min-h-screen bg-gray-500 flex flex-col">
         <NavigationBarSpacer accentGradient={false} />
-        <h1 className="text-4xl font-semibold">Preferences?</h1>
-        <p>Not settings? Oookay.</p>
-
-        <div className="grow bg-black p-4">
+        <div className="p-4 pt-0">
+          <h1 className="text-4xl font-semibold">Preferences</h1>
+          <p>This isn't called settings? Oookay.</p>
+        
           <>
             {preferenceLinks.map((link) => (
-              <div className="w-full bg-red-500 p-4 flex rounded-full items-center gap-4 flex-row" onClick={() => {navigateToPreference(link.href)}}>
-                {link.icon}
-                <h1 className="text-xl">{link.text}</h1>
-                <div className="grow" />
-                <LuChevronRight />
+              <div
+                className="w-full bg-neutral-800 p-4 flex rounded-2xl mb-2 items-center flex-row"
+                onClick={() => {
+                  navigateToPreference(link.href)
+                }}
+              >
+                <div className="flex-row w-full flex items-center justify-center gap-4">
+                  <span className="text-xl">{link.icon}</span>
+                  <h1 className="text-xl">{link.text}</h1>
+                  <div className="grow" />
+                  <span className="text-xl"><LuChevronRight /></span>
+                </div>
+                
               </div>
             ))}
           </>

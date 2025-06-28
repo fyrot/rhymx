@@ -8,7 +8,7 @@ const NavigationBar = () => {
     href: string
   }
   
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(true);
   const [isMaximized, setIsMaximized] = useState(false);
   
   const mainNavigationLinks:MainNavigation[] = [
@@ -19,30 +19,23 @@ const NavigationBar = () => {
 
   const navigation = useNavigate();
   const navigationPosition = useLocation();
-  const navigationHistoryExists = !(navigationPosition.key == "default"  || (navigationPosition.pathname == "/" || navigationPosition.pathname == "/preferences"));
-  console.log(navigationPosition.pathname);
+  const navigationHistoryExists = !(navigationPosition.key == "default"  || (navigationPosition.pathname == "/" || navigationPosition.pathname == "/preferences" || navigationPosition.pathname == "/search"));
   
   useEffect(() => {
     const maximized = () => {setIsMaximized(true);}
     const unmaximized = () => {setIsMaximized(false);}
     window.electronAPI.windowMaximized(maximized);
     window.electronAPI.windowUnmaximized(unmaximized);
-  })
+  }, [])
 
   const navigateToPage = (link: string) => {
     navigation(link);
   }
-
-  const navigateToHome = () => {
-    navigation("/");
-  }
-  const navigateToPreferences = () => {
-    navigation("/preferences");
-  }
   const navigateBack = () => {
     navigation(-1);
   }
-  console.log(navigationHistoryExists);
+  //console.log(navigationPosition.pathname);
+  //console.log(navigationHistoryExists);
   return (
     <div className="w-full draggable-appbar p-2 h-14 z-50 fixed flex flex-row justify-center items-center">
       

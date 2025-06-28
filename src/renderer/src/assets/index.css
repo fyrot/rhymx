@@ -19,7 +19,7 @@
 }
 
 :root {
-    --accent-color: #E52B5075
+    --accent-color: 229, 43, 80
 }
 
 html {
@@ -64,5 +64,21 @@ html {
 }
 .navigation-bar-spacer {
     background: var(--accent-color);
-    background: linear-gradient(180deg, var(--accent-color) 0%, rgba(0, 0, 0, 0) 100%);
+    background: linear-gradient(180deg, rgba(var(--accent-color), 1.0) -100%, rgba(0, 0, 0, 0) 100%);
+}
+
+.accent-color-text-hover-partial-underline {
+		border-bottom-width: 0;
+		background-image: linear-gradient(transparent, transparent), linear-gradient(rgba(var(--accent-color), 1.0), rgba(var(--accent-color), 1.0));
+		background-size: 1rem 5px;
+		background-position: 0 100%;
+		background-repeat: no-repeat;
+		transition: background-size .5s ease-out;
+        transition-delay: 0s;
+}
+
+.accent-color-text-hover-partial-underline:hover {
+	background-size: 100% 5px;
+	background-position: 0 100%;
+    transition-delay: 0.3s;
 }
