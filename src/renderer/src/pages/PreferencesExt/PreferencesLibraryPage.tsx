@@ -1,3 +1,4 @@
+import LibrarySources from "@renderer/components/LibrarySources"
 import NavigationBarSpacer from "@renderer/components/NavigationBarSpacer"
 
 export default function PreferencesLibraryPage() {
@@ -9,7 +10,7 @@ export default function PreferencesLibraryPage() {
           <h1 className="text-5xl font-bold p-2 pl-1 pt-0 ">Library</h1>
           <div className="bg-neutral-600 grow w-full items-center rounded-2xl flex flex-col ">
             <div className="w-full p-4">
-              
+              <LibrarySources />
             </div>
           </div>
         </div>

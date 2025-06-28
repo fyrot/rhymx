@@ -21,6 +21,8 @@ function minimizeWindow(event:Electron.IpcMainEvent):void {
   window?.minimize();
 }
 
+
+
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -40,11 +42,17 @@ function createWindow(): void {
       contextIsolation: true
     }
   })
+  
+  mainWindow.webContents.on("did-finish-load", () => {
+    
+  });
 // if permissions are behaving weirdly, double check effects of sandbox + context isolation
   mainWindow.on('ready-to-show', () => {
+    
     mainWindow.show()
+    
   })
-
+  
   mainWindow.on("maximize", () => {
     mainWindow.webContents.send("windowMaximized");
   })

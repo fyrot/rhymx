@@ -13,7 +13,8 @@ export default function PreferencesPage() {
     { href: "/preferences/library", text: "Library", icon: <LuLibraryBig />}
   ]
   const navigateToPreference = (link: string) => {
-    navigation(link)
+    navigation(link);
+    // could do a view transition here, because of the repeated link -> title element
   }
   return (
     <div>

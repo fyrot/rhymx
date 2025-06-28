@@ -78,7 +78,19 @@ html {
 }
 
 .accent-color-text-hover-partial-underline:hover {
-	background-size: 100% 5px;
+	background-size: 75% 5px;
 	background-position: 0 100%;
     transition-delay: 0.3s;
+}
+.accent-color-hr-hover-partial {
+    color: rgba(var(--accent-color), 1.0);
+    background-color: rgba(var(--accent-color), 1.0);
+    width: 30%;
+    border: 0
+}
+.accent-color-hr-hover-partial:hover {
+    width: 80%;
+}
+.accent-color-checkbox-background {
+    background-color: rgba(var(--accent-color), 1.0)
 }
