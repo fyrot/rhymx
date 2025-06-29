@@ -9,6 +9,10 @@ export interface Album {
   name: string,
   artists: string[],
   discs: Map<string, Song[]>,
-  albumImage: string,
+  albumImage: {
+    dataUrl: string
+  },
+
   albumId: string
 }
+

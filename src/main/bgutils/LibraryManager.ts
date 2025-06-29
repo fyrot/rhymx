@@ -62,6 +62,7 @@ export class LibraryManager {
     })
   }
   async folderIndex():Promise<void> {
+    this.albumLibrary.clear();
     console.log("folder index reached");
     let songPathSet:Set<string> = new Set<string>();
     // note: forEach allows for 3 parameters: value, index, and array
@@ -87,17 +88,26 @@ export class LibraryManager {
               name: albumName,
               artists: [],
               discs: new Map<string, Song[]>(),
-              albumImage: "",
+              albumImage: {
+                dataUrl: ""
+              },
               albumId: ""
             };
             albumList.push(newAlbum);
             console.log("pushed " + albumName);
             albumNameToIndex.set(albumName, newIndex);
           }
-          let albumDiscs = albumList[albumNameToIndex.get(albumName)!].discs; 
+          let albumItem = albumList[albumNameToIndex.get(albumName)!];
+          if (albumItem.albumImage.dataUrl.length == 0 && (data.tags.picture?.data !== undefined && data.tags.picture.data.length > 0)) {
+            console.log("Album art found!!");
+            //console.log(data.tags.picture.data);
+            const imageFormat = data.tags.picture.format;
+            const base64string = Buffer.from(new Uint8Array(data.tags.picture.data)).toString("base64");
+            albumItem.albumImage.dataUrl = `data:${imageFormat};base64,${base64string}`;
+          }
           // ignoring possibility of null here w/ the ! operator, be wary
-          if (!albumDiscs.has(discNumber)) {
-            albumDiscs.set(discNumber, []);
+          if (!albumItem.discs.has(discNumber)) {
+            albumItem.discs.set(discNumber, []);
           }
           const song = <Song>{
             name: data.tags.title ?? basename(songPath, extname(songPath)),
@@ -108,9 +118,9 @@ export class LibraryManager {
           }
           // this works because an array is an object, so we get a reference
           // why am i saying "we"
-          albumDiscs.get(discNumber)?.push(song);
+          albumItem.discs.get(discNumber)?.push(song);
     }
-    console.log(albumList);
+    //console.log(albumList);
     let albumIdSet:Set<string> = new Set<string>();
     // generating unique identifier codes
     // practically very unlikely for a collision, so this is just for peace of mind lol
@@ -124,7 +134,6 @@ export class LibraryManager {
       albumList[i].albumId = newId;
       this.albumLibrary.set(newId, albumList[i]);
     }
-    console.log(this.albumLibrary);
 
   }
   libraryRetrieveAllAlbums():Album[] {
