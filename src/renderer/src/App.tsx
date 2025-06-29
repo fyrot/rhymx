@@ -8,6 +8,7 @@ import SearchPage from "./pages/SearchPage"
 import PreferencesLibraryPage from "./pages/PreferencesExt/PreferencesLibraryPage"
 import { useEffect } from "react"
 import LibraryPage from "./pages/LibraryPage"
+import AlbumPage from "./pages/AlbumPage"
 function App() {
   useEffect(() => {
     const accentColor = localStorage.getItem("--accent-color");
@@ -30,6 +31,7 @@ function App() {
             <Route path="/preferences/display" element={<PreferencesDisplayPage />} />
             <Route path="/preferences/library" element={<PreferencesLibraryPage />} />
             <Route path="/library" element={<LibraryPage />} />
+            <Route path="/album" element={<AlbumPage />} />
           </Routes>
         </div>
         </MemoryRouter>

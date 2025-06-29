@@ -1,8 +1,15 @@
+import { useNavigate } from "react-router";
 import { Album } from "src/main/bgutils/songInformation";
 
 const AlbumTile = ( {album}:{album: Album}) => {
+  const navigate = useNavigate();
+  const navigateToAlbum = () => {
+    console.log("abcoabc")
+    
+    navigate(`/album?id=${album.albumId}`);
+  }
   return (
-    <div className="flex-col inline-flex p-4 bg-transparent transition-all duration-300 hover:bg-slate-600 rounded-2xl">
+    <div onClick={navigateToAlbum} className="flex-col inline-flex p-4 bg-transparent transition-all duration-300 hover:bg-slate-600 rounded-2xl">
       <div className="w-48 h-48 rounded-xl" style={{backgroundImage: `url(${album.albumImage.dataUrl})`, backgroundSize: "cover"}} />
       <div className="flex-col inline-flex pt-2 w-48">
         <h1 className="">{album.name}</h1>
