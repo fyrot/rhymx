@@ -7,6 +7,7 @@ import PreferencesDisplayPage from "./pages/PreferencesExt/PreferencesDisplayPag
 import SearchPage from "./pages/SearchPage"
 import PreferencesLibraryPage from "./pages/PreferencesExt/PreferencesLibraryPage"
 import { useEffect } from "react"
+import LibraryPage from "./pages/LibraryPage"
 function App() {
   useEffect(() => {
     const accentColor = localStorage.getItem("--accent-color");
@@ -28,6 +29,7 @@ function App() {
             <Route path="/preferences" element={<PreferencesPage />} />
             <Route path="/preferences/display" element={<PreferencesDisplayPage />} />
             <Route path="/preferences/library" element={<PreferencesLibraryPage />} />
+            <Route path="/library" element={<LibraryPage />} />
           </Routes>
         </div>
         </MemoryRouter>

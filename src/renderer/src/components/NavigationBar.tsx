@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { LuChevronLeft, LuMenu, LuMinus, LuMaximize, LuMinimize, LuX, LuHouse, LuSearch, LuCog, LuSettings } from "react-icons/lu"
+import { LuChevronLeft, LuMenu, LuMinus, LuMaximize, LuMinimize, LuX, LuHouse, LuSearch, LuCog, LuSettings, LuLibrary } from "react-icons/lu"
 import { useLocation, useNavigate } from "react-router"
 const NavigationBar = () => {
   type MainNavigation = {
@@ -14,12 +14,13 @@ const NavigationBar = () => {
   const mainNavigationLinks:MainNavigation[] = [
     {name: "Home", icon: <LuHouse  />, href: "/"},
     {name: "Search", icon: <LuSearch />, href: "/search"},
-    {name: "Preferences", icon: <LuSettings  />, href: "/preferences"}
+    {name: "Preferences", icon: <LuSettings  />, href: "/preferences"},
+    {name: "Library", icon: <LuLibrary />, href: "/library"}
   ]
 
   const navigation = useNavigate();
   const navigationPosition = useLocation();
-  const navigationHistoryExists = !(navigationPosition.key == "default"  || (navigationPosition.pathname == "/" || navigationPosition.pathname == "/preferences" || navigationPosition.pathname == "/search"));
+  const navigationHistoryExists = !(navigationPosition.key == "default"  || (navigationPosition.pathname == "/" || navigationPosition.pathname == "/preferences" || navigationPosition.pathname == "/search" || navigationPosition.pathname == "/library"));
   
   useEffect(() => {
     const maximized = () => {setIsMaximized(true);}
@@ -49,7 +50,7 @@ const NavigationBar = () => {
         <div onClick={() => {setMenuOpen(!menuOpen);}} className="w-12 flex items-center py-2 navigation-bar-icon-bg rounded-full none-draggable-appbar justify-center grow ">
             <LuMenu  className={`text-xl grow none-draggable-appbar navigation-bar-icon navigation-bar-menu-icon ${menuOpen ? "navigation-bar-menu-icon-opened" : ""} `} />
         </div>
-        <div className={`${menuOpen ? "w-36" : "w-0"} overflow-hidden transition-all duration-300 flex flex-row ease-out`}>
+        <div className={`${menuOpen ? "w-48" : "w-0"} overflow-hidden transition-all duration-300 flex flex-row ease-out`}>
             
             <>
             {mainNavigationLinks.map((link) => (

@@ -1,7 +1,17 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import * as fs from 'fs';
+import { LibraryManager } from './bgutils/LibraryManager';
+import { Album } from './bgutils/songInformation';
+
+
+let libraryManager = new LibraryManager();
+
+let libraryFolderPaths:string[] = [];
+
+libraryManager.startup();
 
 function closeWindow(event, shouldClose):void {
   const window = BrowserWindow.fromWebContents(event.sender);
@@ -21,7 +31,36 @@ function minimizeWindow(event:Electron.IpcMainEvent):void {
   window?.minimize();
 }
 
+async function libraryPrefRetrieveSourceList(event):Promise<string[]> {
+  return libraryManager.folderListRetrieve();
+}
 
+async function libraryPrefUpdateSourceList(event, sourceList:string[]):Promise<void> {
+  libraryManager.folderListUpdate(sourceList);
+}
+
+async function libraryPrefAddNewSource(event):Promise<string[]> {
+  console.log("Adding new source");
+  const window = BrowserWindow.fromWebContents(event.sender);
+  let folderPaths = await dialog.showOpenDialog({
+    properties: ["openDirectory", "multiSelections"],
+    buttonLabel: "Add",
+    title: "Select a source folder"
+  })
+  console.log(folderPaths.filePaths);
+  // if cancelled, this will still return an empty array
+  return folderPaths.filePaths;
+}
+
+async function librarySourceIndex(event):Promise<void> {
+  await libraryManager.folderIndex();
+}
+async function libraryRetrieveAllAlbums(event):Promise<Album[]> {
+  return libraryManager.libraryRetrieveAllAlbums();
+}
+async function libraryRetrieveAlbumById(event, id):Promise<Album | undefined> {
+  return libraryManager.libraryRetrieveAlbumById(id);
+}
 
 function createWindow(): void {
   // Create the browser window.
@@ -100,6 +139,12 @@ app.whenReady().then(() => {
   ipcMain.on("closeWindow", closeWindow);
   ipcMain.on("toggleMaximizeWindow", toggleMaximizeWindow);
   ipcMain.on("minimizeWindow", minimizeWindow);
+  ipcMain.handle("libraryPref:addNewSource", libraryPrefAddNewSource);
+  ipcMain.handle("libraryPref:retrieveSourceList", libraryPrefRetrieveSourceList);
+  ipcMain.on("libraryPref:updateSourceList", libraryPrefUpdateSourceList);
+  ipcMain.on("libraryPref:sourceIndex", librarySourceIndex);
+  ipcMain.handle("libraryRetrieve:allAlbums", libraryRetrieveAllAlbums);
+  ipcMain.handle("libraryRetriev:albumById", libraryRetrieveAlbumById);
   createWindow()
 
   app.on('activate', function () {

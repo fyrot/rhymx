@@ -15,7 +15,13 @@ if (process.contextIsolated) {
       toggleMaximizeWindow: () => {ipcRenderer.send("toggleMaximizeWindow");},
       windowMaximized: (callback) => {ipcRenderer.on("windowMaximized", callback);},
       windowUnmaximized: (callback) => {ipcRenderer.on("windowUnmaximized", callback);},
-      minimizeWindow: () => {ipcRenderer.send("minimizeWindow");}
+      minimizeWindow: () => {ipcRenderer.send("minimizeWindow");},
+      libraryPrefAddNewSource: ():Promise<string[]> => {return ipcRenderer.invoke("libraryPref:addNewSource")},
+      libraryPrefRetrieveSourceList: () => {return ipcRenderer.invoke("libraryPref:retrieveSourceList");},
+      libraryPrefUpdateSourceList: (sources:string[]) => {ipcRenderer.send("libraryPref:updateSourceList", sources);},
+      libraryPrefSourceIndex: () => {ipcRenderer.send("libraryPref:sourceIndex");},
+      libraryRetrieveAllAlbums: () => {return ipcRenderer.invoke("libraryRetrieve:allAlbums")},
+      libraryRetrieveAlbumById: (id: string) => {return ipcRenderer.invoke("libraryRetrieve:albumById", id);}
     })
   } catch (error) {
     console.log(error);

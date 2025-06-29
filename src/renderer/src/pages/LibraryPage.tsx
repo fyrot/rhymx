@@ -1,0 +1,30 @@
+import AlbumsCarousel from "@renderer/components/AlbumsCarousel";
+import NavigationBarSpacer from "@renderer/components/NavigationBarSpacer";
+import { useEffect, useState } from "react";
+import { Album } from "src/main/bgutils/songInformation";
+export default function LibraryPage() {
+  const [allAlbumsCarouselContent, updateAllAlbumsCarouselContent] = useState<Album[]>([]);
+  useEffect(() => {
+    let allAlbumData:Album[];
+    window.electronAPI.libraryRetrieveAllAlbums().then((value) => {
+      allAlbumData = value;
+      updateAllAlbumsCarouselContent(value);
+      console.log(value)
+    })
+  }, []);
+  return (
+    <div>
+      <div className="min-h-screen bg-gray-500 flex flex-col items-center justify-center">
+        <NavigationBarSpacer accentGradient={false} />
+        <div className="grow flex bg-red-500 flex-col w-full justify-center items-center">
+          <div className="p-4 w-full">
+            <h1>this is where the entire library can be accessed</h1>
+            <AlbumsCarousel albumList={allAlbumsCarouselContent} title={"Woaah"} />
+      
+          </div>
+          
+        </div>
+        </div>
+    </div>
+  )
+}

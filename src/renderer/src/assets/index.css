@@ -19,7 +19,7 @@
 }
 
 :root {
-    --accent-color: 229, 43, 80
+    --accent-color: 250, 250, 250
 }
 
 html {
@@ -66,6 +66,16 @@ html {
     background: var(--accent-color);
     background: linear-gradient(180deg, rgba(var(--accent-color), 1.0) -100%, rgba(0, 0, 0, 0) 100%);
 }
+@keyframes keyframes-library-pref-folder-fade-in-left {
+        from {
+            opacity: 0;
+        } to {
+            opacity: 1;
+        }
+    }
+.library-pref-folder-fade-in-left {
+    animation: keyframes-library-pref-folder-fade-in-left 0.5s ease-out 
+}
 
 .accent-color-text-hover-partial-underline {
 		border-bottom-width: 0;
@@ -93,4 +103,19 @@ html {
 }
 .accent-color-checkbox-background {
     background-color: rgba(var(--accent-color), 1.0)
+}
+.accent-color-scrollbar {
+    overflow-y: auto;
+    max-height: 12rem;
+    transition: all 0.3 ease-in-out
+}
+.accent-color-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(var(--accent-color), 1.0);
+    border-radius: 1rem
+}
+
+.accent-color-scrollbar::-webkit-scrollbar {
+    width: 0.75rem;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 1rem;
 }

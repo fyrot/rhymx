@@ -43,7 +43,7 @@ export default function PreferencesDisplayPage() {
           <h1 className="text-5xl font-bold p-2 pl-1 pt-0 ">Display</h1>
           <div className="bg-neutral-600 grow w-full items-center rounded-2xl flex flex-col ">
             <div className="w-full p-4">
-              <div className="w-full p-4 rounded-2xl bg-neutral-700 flex flex-col">
+              <div className="w-full p-4 rounded-2xl bg-neutral-800 flex flex-col">
                 <div>
                   <h1 className="accent-color-text-hover-partial-underline font-semibold text-2xl pb-1 inline-block">
                     Accent Color
