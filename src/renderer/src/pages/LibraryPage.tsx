@@ -10,7 +10,7 @@ export default function LibraryPage() {
       allAlbumData = value;
       updateAllAlbumsCarouselContent(value);
       console.log(value)
-    })
+    }).catch((error) => {console.log(error);})
   }, []);
   return (
     <div>

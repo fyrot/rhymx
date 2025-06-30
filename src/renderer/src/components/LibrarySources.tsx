@@ -13,7 +13,7 @@ const LibrarySources = () => {
       console.log(response)
       updateTestSources(response);
       
-    })
+    }).catch((error) => {console.log(error);})
   }, [])
 
   const addNewFolder = async () => {

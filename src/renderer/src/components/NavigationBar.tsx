@@ -13,9 +13,10 @@ const NavigationBar = () => {
   
   const mainNavigationLinks:MainNavigation[] = [
     {name: "Home", icon: <LuHouse  />, href: "/"},
+    {name: "Library", icon: <LuLibrary />, href: "/library"},
     {name: "Search", icon: <LuSearch />, href: "/search"},
     {name: "Preferences", icon: <LuSettings  />, href: "/preferences"},
-    {name: "Library", icon: <LuLibrary />, href: "/library"}
+    
   ]
 
   const navigation = useNavigate();

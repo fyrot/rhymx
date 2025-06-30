@@ -6,6 +6,7 @@ import * as fs from 'fs';
 import { LibraryManager } from './bgutils/LibraryManager';
 import { Album } from './bgutils/songInformation';
 
+app.commandLine.appendSwitch("enable-features", "OverlayScrollbar")
 
 let libraryManager = new LibraryManager();
 
@@ -144,7 +145,7 @@ app.whenReady().then(() => {
   ipcMain.on("libraryPref:updateSourceList", libraryPrefUpdateSourceList);
   ipcMain.on("libraryPref:sourceIndex", librarySourceIndex);
   ipcMain.handle("libraryRetrieve:allAlbums", libraryRetrieveAllAlbums);
-  ipcMain.handle("libraryRetriev:albumById", libraryRetrieveAlbumById);
+  ipcMain.handle("libraryRetrieve:albumById", libraryRetrieveAlbumById);
   createWindow()
 
   app.on('activate', function () {

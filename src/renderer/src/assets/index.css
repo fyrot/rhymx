@@ -28,7 +28,7 @@ html {
 
 .bg-black-translucent {
     background-color: rgba(12, 12, 12, 0.6);
-    backdrop-filter: blur(2rem);   
+    backdrop-filter: saturate(150%) blur(2rem);   
 }
 
 .draggable-appbar {
@@ -107,6 +107,7 @@ html {
 .accent-color-scrollbar {
     overflow-y: auto;
     max-height: 12rem;
+    scrollbar-gutter: stable;
     transition: all 0.3 ease-in-out
 }
 .accent-color-scrollbar::-webkit-scrollbar-thumb {
@@ -116,6 +117,62 @@ html {
 
 .accent-color-scrollbar::-webkit-scrollbar {
     width: 0.75rem;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.0);
     border-radius: 1rem;
+}
+
+.album-image-parallax-bar {
+    background-color: rgba(0,0,0,0.25);
+    backdrop-filter: saturate(125%) blur(1rem);
+}
+.album-song-tile-styles {
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(0.5rem);
+    transition: all 0.3s ease-out;
+}
+.album-ell-hide-on-tile-hover {
+    width: 0;
+    
+    transition: all 0.3s ease;
+    opacity: 0;
+}
+.album-song-tile-styles:hover .album-song-tile-row-container .album-ell-hide-on-tile-hover {
+    width: 1.25rem;
+    margin-right: 0;
+    opacity: 1.0;
+}
+.album-numplay-num-hide-on-tile-hover {
+    display:inline-block;
+}
+.album-numplay-play-show-on-tile-hover {
+    display: none;
+}
+.album-song-tile-styles:hover .album-song-tile-row-container .album-numplay-click-container .album-numplay-container .album-numplay-num-hide-on-tile-hover {
+    display: none;
+}
+.album-song-tile-styles:hover .album-song-tile-row-container .album-numplay-click-container .album-numplay-container .album-numplay-play-show-on-tile-hover {
+    display:inline-block;
+}
+.album-page-more-content-fade {
+    background: transparent;
+    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.5) 100%);
+}
+
+html {
+  scrollbar-width: none;  /* Thin scrollbar */
+  scrollbar-color: transparent transparent; /* Transparent scrollbar */
+}
+
+/* WebKit browsers (Chrome, Safari, Edge, etc.) */
+::-webkit-scrollbar {
+  width: 0px; /* Or any other width you like */
+}
+
+::-webkit-scrollbar-track {
+  background: transparent; /* Make the track transparent */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 0px;
 }
