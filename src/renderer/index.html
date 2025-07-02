@@ -5,8 +5,9 @@
     <title>Rhymx</title>
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
+      content="media-src: 'self' file://; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
     />
+    <!--default-src 'none';  was overriding media-src -->
     <script src="/src/renderer/src/rendererStartup.ts"></script>
   </head>
 

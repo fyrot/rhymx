@@ -12,7 +12,7 @@ export interface IElectronAPI {
     libraryRetrieveAllAlbums: () => Promise<Album[]>,
     libraryRetrieveAlbumById: (id: string) => Promise<Album | undefined>,
     queueUpdateQueueAndIndex: (newQueue: Song[], newIndex: number) => void,
-    queueRetrieveCurrent: () => Song,
+    queueRetrieveCurrent: () => Promise<Song>,
     queueNotifyAudioBar: (callback) => void; 
 }
 declare global {

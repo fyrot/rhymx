@@ -47,7 +47,7 @@ export default function AlbumPage() {
                     }}
                   />
                   <div className="flex flex-col-reverse pl-4 flex-">
-                    <h1 className="text-[min(4rem,max(10vh,2rem))] text-left  text-wrap overflow-hidden text-ellipsis font-semibold leading-[1.1] pb-1 tracking-tight drop-shadow-2xl inline-block">
+                    <h1 className="album-title-name-shadow text-[min(4rem,max(10vh,2rem))] text-left  text-wrap overflow-hidden text-ellipsis font-semibold leading-[1.1] pb-1 tracking-tight drop-shadow-2xl inline-block">
                       {album?.name}
                     </h1>
                   </div>
@@ -82,7 +82,7 @@ export default function AlbumPage() {
                     }}
                   />
                   <div className="flex flex-col py-4">
-                    <h1 className="text-[min(4rem,max(8vh,2rem))] text-center  text-wrap overflow-hidden text-ellipsis font-semibold leading-[1.1] pb-1 tracking-tight drop-shadow-2xl inline-block">
+                    <h1 className="album-title-name-shadow text-[min(4rem,max(8vh,2rem))] text-center  text-wrap overflow-hidden text-ellipsis font-semibold leading-[1.1] pb-1 tracking-tight drop-shadow-2xl inline-block">
                       {album?.name}
                     </h1>
                     <h1 className="text text-center opacity-70 ">

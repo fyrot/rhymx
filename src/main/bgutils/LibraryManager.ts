@@ -128,6 +128,7 @@ export class LibraryManager {
           const artistsList = sanitizedMultiSplit(usedDelimiters, defaultDelimiter, data.tags.artist ?? "Unknown");
           const song = <Song>{
             name: data.tags.title ?? basename(songPath, extname(songPath)),
+            trackNo: 1,
             artists: artistsList,
             albumRefId: data.tags.album ?? "Download",
             filePath: songPath,

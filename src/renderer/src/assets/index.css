@@ -141,6 +141,9 @@ html {
     margin-right: 0;
     opacity: 1.0;
 }
+.album-title-name-shadow {
+    filter: drop-shadow(0rem 0rem 0.8rem black);
+}
 .album-numplay-num-hide-on-tile-hover {
     display:inline-block;
 }

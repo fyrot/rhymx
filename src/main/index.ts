@@ -37,8 +37,8 @@ function queueUpdateQueueAndIndex(event, newQueue:Song[], newIndex:number):void 
 }
 
 
-
-function queueRetrieveCurrent(event):Song {
+// invokes HAVE to be async
+async function queueRetrieveCurrent(event):Promise<Song> {
   return queueManager.retrieveCurrent();
 }
 function toggleMaximizeWindow(event):void {
@@ -101,7 +101,9 @@ function createWindow(): void {
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),
       sandbox: true,
-      contextIsolation: true
+      contextIsolation: true,
+      webSecurity: false
+      // webSecurity is set to false to test local resource loading
     }
   })
   
