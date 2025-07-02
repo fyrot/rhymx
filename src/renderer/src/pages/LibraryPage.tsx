@@ -16,7 +16,7 @@ export default function LibraryPage() {
     <div>
       <div className="min-h-screen bg-gray-500 flex flex-col items-center justify-center">
         <NavigationBarSpacer accentGradient={false} />
-        <div className="grow flex bg-red-500 flex-col w-full justify-center items-center">
+        <div className="grow flex flex-col w-full items-center">
           <div className="p-4 w-full">
             <h1>this is where the entire library can be accessed</h1>
             <AlbumsCarousel albumList={allAlbumsCarouselContent} title={"Woaah"} />

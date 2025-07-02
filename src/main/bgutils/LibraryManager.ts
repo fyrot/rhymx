@@ -81,7 +81,15 @@ export class LibraryManager {
     // doing them all like this yields memory errors, need to implement batch processing just so we don't overload the servers
     // though this is incredibly more performant -- even without the separate promise optimizations done earlier
     // it processed about 100+ .flacs and a few mp3s in half a second sheeeesh
-    
+    function sanitizedMultiSplit(delimiters:string[], defaultDelimiter:string, splitString:string):string[] {
+      for (const delimiter of delimiters) {
+        splitString = splitString.replace(delimiter, defaultDelimiter);
+      }
+      let unsanitizedSplit = splitString.split(defaultDelimiter);
+      return unsanitizedSplit.filter((value) => value.trim().length > 0);
+    }
+    const usedDelimiters = [",", ";", "\0"];
+    const defaultDelimiter = ",";
     // ignore later commented out code, for reference
     await Promise.all(songPathsUnique.map(songPath => new Promise<TagType>(function (resolve, reject) {
       jsmediatags.read(songPath, {
@@ -117,10 +125,10 @@ export class LibraryManager {
           if (!albumItem.discs.has(discNumber)) {
             albumItem.discs.set(discNumber, []);
           }
-          
+          const artistsList = sanitizedMultiSplit(usedDelimiters, defaultDelimiter, data.tags.artist ?? "Unknown");
           const song = <Song>{
             name: data.tags.title ?? basename(songPath, extname(songPath)),
-            artists: [data.tags.artist],
+            artists: artistsList,
             albumRefId: data.tags.album ?? "Download",
             filePath: songPath,
             songId: ""            
@@ -263,7 +271,7 @@ export class LibraryManager {
       albumItem.discs.get(discNumber)?.push(song)
     }*/
     const perfTimestampEnd = Date.now();
-    console.log("Indexing time: " + (perfTimestampEnd-perfTimestampStart).toString());
+    console.log("Indexing time: " + (perfTimestampEnd-perfTimestampStart).toString()+"ms");
     
     //console.log(albumList);
     let albumIdSet: Set<string> = new Set<string>()
@@ -277,6 +285,40 @@ export class LibraryManager {
       }
       albumIdSet.add(newId)
       albumList[i].albumId = newId
+
+      if (true) {
+        const keys = albumList[i].discs.keys().toArray();
+        for (const key of keys) {
+          // using the ! here to disable undefined guard, since these keys have to be in the di
+          albumList[i].discs.get(key)!.sort((a, b) => {
+            if (a.trackNo != b.trackNo) {
+              return a.trackNo - b.trackNo; 
+            } else {
+              if (a.name < b.name) {
+                return -1;
+              } else if (a.name > b.name) {
+                return 1;
+              } else {return 0;}
+            }
+          })
+        }
+      }
+      
+      if (true) {
+        for (const album of albumList) {
+          let artistSet: Set<string> = new Set<string>();
+          const allAlbumDiscs = [...album.discs.values()];
+          for (const disc of allAlbumDiscs) {
+            // write this better later
+            disc.forEach((song:Song) => {
+            song.artists.forEach((artist:string) => {artistSet.add(artist);})
+          })
+          
+          }
+          album.artists = artistSet.values().toArray();
+        }
+      }
+
       this.albumLibrary.set(newId, albumList[i])
     }
   }

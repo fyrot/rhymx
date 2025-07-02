@@ -1,4 +1,4 @@
-import { Album } from "../main/bgutils/songInformation";
+import { Album, Song } from "../main/bgutils/songInformation";
 export interface IElectronAPI {
     closeWindow: (shouldClose: boolean) => void,
     toggleMaximizeWindow: () => void,
@@ -10,7 +10,10 @@ export interface IElectronAPI {
     libraryPrefUpdateSourceList: (sources:string[]) => void,
     libraryPrefSourceIndex: () => void,
     libraryRetrieveAllAlbums: () => Promise<Album[]>,
-    libraryRetrieveAlbumById: (id: string) => Promise<Album | undefined>
+    libraryRetrieveAlbumById: (id: string) => Promise<Album | undefined>,
+    queueUpdateQueueAndIndex: (newQueue: Song[], newIndex: number) => void,
+    queueRetrieveCurrent: () => Song,
+    queueNotifyAudioBar: (callback) => void; 
 }
 declare global {
     interface Window {

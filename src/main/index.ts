@@ -4,21 +4,43 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import * as fs from 'fs';
 import { LibraryManager } from './bgutils/LibraryManager';
-import { Album } from './bgutils/songInformation';
+import { Album, Song } from './bgutils/songInformation';
+import { QueueManager } from './bgutils/QueueManager';
 
 app.commandLine.appendSwitch("enable-features", "OverlayScrollbar")
 
 let libraryManager = new LibraryManager();
+let queueManager = new QueueManager();
 
 let libraryFolderPaths:string[] = [];
 
 libraryManager.startup();
+
+let globalMainWindow:BrowserWindow; 
 
 function closeWindow(event, shouldClose):void {
   const window = BrowserWindow.fromWebContents(event.sender);
   window?.close();
 }
 
+function queueNotifyAudioBar() {
+  if (globalMainWindow !== undefined) {
+    globalMainWindow.webContents.send("queue:notifyAudioBar");
+  }
+}
+
+function queueUpdateQueueAndIndex(event, newQueue:Song[], newIndex:number):void {
+  console.log("received queue and index");
+  queueManager.updateQueue(newQueue);
+  queueManager.updateIndex(newIndex)
+  queueNotifyAudioBar();
+}
+
+
+
+function queueRetrieveCurrent(event):Song {
+  return queueManager.retrieveCurrent();
+}
 function toggleMaximizeWindow(event):void {
   const window = BrowserWindow.fromWebContents(event.sender);
   if (window !== undefined && window !== null) {
@@ -84,7 +106,7 @@ function createWindow(): void {
   })
   
   mainWindow.webContents.on("did-finish-load", () => {
-    
+    globalMainWindow = mainWindow;
   });
 // if permissions are behaving weirdly, double check effects of sandbox + context isolation
   mainWindow.on('ready-to-show', () => {
@@ -146,6 +168,8 @@ app.whenReady().then(() => {
   ipcMain.on("libraryPref:sourceIndex", librarySourceIndex);
   ipcMain.handle("libraryRetrieve:allAlbums", libraryRetrieveAllAlbums);
   ipcMain.handle("libraryRetrieve:albumById", libraryRetrieveAlbumById);
+  ipcMain.on("queue:updateQueueAndIndex", queueUpdateQueueAndIndex);
+  ipcMain.handle("queue:retrieveCurrent", queueRetrieveCurrent);
   createWindow()
 
   app.on('activate', function () {

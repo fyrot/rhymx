@@ -17,4 +17,3 @@ export interface Album {
 
   albumId: string
 }
-

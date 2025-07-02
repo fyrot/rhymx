@@ -123,7 +123,7 @@ html {
 
 .album-image-parallax-bar {
     background-color: rgba(0,0,0,0.25);
-    backdrop-filter: saturate(125%) blur(1rem);
+    backdrop-filter: brightness(150%) saturate(125%) blur(1rem);
 }
 .album-song-tile-styles {
     background-color: rgba(0, 0, 0, 0.5);
@@ -132,8 +132,8 @@ html {
 }
 .album-ell-hide-on-tile-hover {
     width: 0;
-    
     transition: all 0.3s ease;
+    transition-delay:200ms;
     opacity: 0;
 }
 .album-song-tile-styles:hover .album-song-tile-row-container .album-ell-hide-on-tile-hover {

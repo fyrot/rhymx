@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import { Song } from '../main/bgutils/songInformation';
 
 // Custom APIs for renderer
 const api = {}
@@ -21,7 +22,10 @@ if (process.contextIsolated) {
       libraryPrefUpdateSourceList: (sources:string[]) => {ipcRenderer.send("libraryPref:updateSourceList", sources);},
       libraryPrefSourceIndex: () => {ipcRenderer.send("libraryPref:sourceIndex");},
       libraryRetrieveAllAlbums: () => {return ipcRenderer.invoke("libraryRetrieve:allAlbums")},
-      libraryRetrieveAlbumById: (id: string) => {return ipcRenderer.invoke("libraryRetrieve:albumById", id);}
+      libraryRetrieveAlbumById: (id: string) => {return ipcRenderer.invoke("libraryRetrieve:albumById", id);},
+      queueUpdateQueueAndIndex: (newQueue: Song[], newIndex: number) => {ipcRenderer.send("queue:updateQueueAndIndex", newQueue, newIndex);},
+      queueRetrieveCurrent: () => {return ipcRenderer.invoke("queue:retrieveCurrent");},
+      queueNotifyAudioBar: (callback) => {ipcRenderer.on("queue:notifyAudioBar", (_event) => {callback()});}
     })
   } catch (error) {
     console.log(error);

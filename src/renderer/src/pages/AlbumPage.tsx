@@ -55,8 +55,8 @@ export default function AlbumPage() {
               </div>
             </div>
             <div className="h-16">
-              <h1 className="md:pl-[calc(2rem+min(40vh,20rem)+1rem)] text-xl leading-loose">
-                {album?.artists.join(", ")}Blah
+              <h1 className="md:pl-[calc(2rem+min(40vh,20rem)+1rem+0.125rem)] opacity-70 leading-loose">
+                {album?.artists.join(", ")}
               </h1>
             </div>
           </div>
@@ -74,21 +74,22 @@ export default function AlbumPage() {
                 <NavigationBarSpacer accentGradient={false} />
                 <div className="w-full flex flex-col items-center px-8 pt-2">
                   <div
-                    className="w-[min(40vh,20rem)] h-[min(40vh,20rem)] flex-shrink-0 rounded-xl shadow-2xl drop-shadow-2xl"
+                    className="w-[min(30vh,20rem)] h-[min(30vh,20rem)] flex-shrink-0 rounded-xl shadow-2xl drop-shadow-2xl"
                     style={{
                       backgroundImage: `url(${album?.albumImage.dataUrl})`,
                       backgroundSize: "cover",
                       backgroundPosition: "center"
                     }}
                   />
-                  <div className="flex flex-col-reverse pl-4 pt-8">
+                  <div className="flex flex-col py-4">
                     <h1 className="text-[min(4rem,max(8vh,2rem))] text-center  text-wrap overflow-hidden text-ellipsis font-semibold leading-[1.1] pb-1 tracking-tight drop-shadow-2xl inline-block">
                       {album?.name}
                     </h1>
-                  </div>
-                  <h1 className="text-xl py-2">
-              {album?.artists.join(", ")}Blah
+                    <h1 className="text text-center opacity-70 ">
+              {album?.artists.join(", ")}
             </h1>
+                  </div>
+                  
                 </div>
               </div>
             </div>
@@ -102,7 +103,7 @@ export default function AlbumPage() {
               album.discs
                 .values()
                 .toArray()[0]
-                .map((song, index) => <AlbumSongTile song={song} trackNo={index + 1} />)
+                .map((song, index, array) => <AlbumSongTile albumQueue={array} song={song} trackNo={index + 1} />)
             ) : (
               <div></div>
             )}
