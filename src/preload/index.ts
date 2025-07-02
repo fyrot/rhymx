@@ -23,9 +23,12 @@ if (process.contextIsolated) {
       libraryPrefSourceIndex: () => {ipcRenderer.send("libraryPref:sourceIndex");},
       libraryRetrieveAllAlbums: () => {return ipcRenderer.invoke("libraryRetrieve:allAlbums")},
       libraryRetrieveAlbumById: (id: string) => {return ipcRenderer.invoke("libraryRetrieve:albumById", id);},
+      libraryRetrieveAlbumImageById: (id: string) => {return ipcRenderer.invoke("libraryRetrieve:albumImageById", id)},
       queueUpdateQueueAndIndex: (newQueue: Song[], newIndex: number) => {ipcRenderer.send("queue:updateQueueAndIndex", newQueue, newIndex);},
       queueRetrieveCurrent: () => {return ipcRenderer.invoke("queue:retrieveCurrent");},
-      queueNotifyAudioBar: (callback) => {ipcRenderer.on("queue:notifyAudioBar", (_event) => {callback()});}
+      queueNotifyAudioBar: (callback) => {ipcRenderer.on("queue:notifyAudioBar", (_event) => {callback()});},
+      queueNotifyTrackEnded: () => {ipcRenderer.send("queue:notifyTrackEnded");},
+      queueNotifySkipTracks: (tracksSkipped: number) => {ipcRenderer.send("queue:notifySkipTracks", tracksSkipped);}
     })
   } catch (error) {
     console.log(error);

@@ -128,7 +128,7 @@ export class LibraryManager {
           const artistsList = sanitizedMultiSplit(usedDelimiters, defaultDelimiter, data.tags.artist ?? "Unknown");
           const song = <Song>{
             name: data.tags.title ?? basename(songPath, extname(songPath)),
-            trackNo: 1,
+            trackNo: data.tags.track ?? 1,
             artists: artistsList,
             albumRefId: data.tags.album ?? "Download",
             filePath: songPath,
@@ -312,7 +312,8 @@ export class LibraryManager {
           for (const disc of allAlbumDiscs) {
             // write this better later
             disc.forEach((song:Song) => {
-            song.artists.forEach((artist:string) => {artistSet.add(artist);})
+              song.albumRefId = album.albumId;
+              song.artists.forEach((artist:string) => {artistSet.add(artist);})
           })
           
           }
@@ -328,5 +329,8 @@ export class LibraryManager {
   }
   libraryRetrieveAlbumById(id: string): Album | undefined {
     return this.albumLibrary.get(id)
+  }
+  libraryRetrieveAlbumImageById(id: string):string | undefined {
+    return this.albumLibrary.get(id)?.albumImage.dataUrl;
   }
 }

@@ -14,6 +14,5 @@ export interface Album {
     hasData: boolean,
     dataUrl: string
   },
-
   albumId: string
 }

@@ -10,7 +10,7 @@ import { QueueManager } from './bgutils/QueueManager';
 app.commandLine.appendSwitch("enable-features", "OverlayScrollbar")
 
 let libraryManager = new LibraryManager();
-let queueManager = new QueueManager();
+let queueManager:QueueManager = new QueueManager();
 
 let libraryFolderPaths:string[] = [];
 
@@ -28,6 +28,10 @@ function queueNotifyAudioBar() {
     globalMainWindow.webContents.send("queue:notifyAudioBar");
   }
 }
+function queueNotifySkipTracks(event, tracksSkipped:number) {
+  queueManager.skipTracks(tracksSkipped);
+  queueNotifyAudioBar();
+}
 
 function queueUpdateQueueAndIndex(event, newQueue:Song[], newIndex:number):void {
   console.log("received queue and index");
@@ -41,6 +45,11 @@ function queueUpdateQueueAndIndex(event, newQueue:Song[], newIndex:number):void 
 async function queueRetrieveCurrent(event):Promise<Song> {
   return queueManager.retrieveCurrent();
 }
+function queueNotifyTrackEnded(event) {
+  queueManager.trackEnded();
+  queueNotifyAudioBar();
+}
+
 function toggleMaximizeWindow(event):void {
   const window = BrowserWindow.fromWebContents(event.sender);
   if (window !== undefined && window !== null) {
@@ -84,7 +93,10 @@ async function libraryRetrieveAllAlbums(event):Promise<Album[]> {
 async function libraryRetrieveAlbumById(event, id):Promise<Album | undefined> {
   return libraryManager.libraryRetrieveAlbumById(id);
 }
-
+async function libraryRetrieveAlbumImageById(event, id):Promise<string> {
+  console.log("id", id)
+  return libraryManager.libraryRetrieveAlbumImageById(id) ?? "";
+}
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -170,8 +182,11 @@ app.whenReady().then(() => {
   ipcMain.on("libraryPref:sourceIndex", librarySourceIndex);
   ipcMain.handle("libraryRetrieve:allAlbums", libraryRetrieveAllAlbums);
   ipcMain.handle("libraryRetrieve:albumById", libraryRetrieveAlbumById);
+  ipcMain.handle("libraryRetrieve:albumImageById", libraryRetrieveAlbumImageById);
   ipcMain.on("queue:updateQueueAndIndex", queueUpdateQueueAndIndex);
   ipcMain.handle("queue:retrieveCurrent", queueRetrieveCurrent);
+  ipcMain.on("queue:notifyTrackEnded", queueNotifyTrackEnded)
+  ipcMain.on("queue:notifySkipTracks", queueNotifySkipTracks);
   createWindow()
 
   app.on('activate', function () {

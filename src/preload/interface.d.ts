@@ -11,9 +11,12 @@ export interface IElectronAPI {
     libraryPrefSourceIndex: () => void,
     libraryRetrieveAllAlbums: () => Promise<Album[]>,
     libraryRetrieveAlbumById: (id: string) => Promise<Album | undefined>,
+    libraryRetrieveAlbumImageById: (id: string) => Promise<string>,
     queueUpdateQueueAndIndex: (newQueue: Song[], newIndex: number) => void,
     queueRetrieveCurrent: () => Promise<Song>,
-    queueNotifyAudioBar: (callback) => void; 
+    queueNotifyAudioBar: (callback) => void, 
+    queueNotifyTrackEnded: () => void,
+    queueNotifySkipTracks: (tracksSkipped:number) => void
 }
 declare global {
     interface Window {
