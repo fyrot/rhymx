@@ -1,12 +1,12 @@
 import { Song } from "src/main/bgutils/songInformation"
 import { LuEllipsisVertical, LuPlay } from "react-icons/lu"
-const AlbumSongTile = ({ song, trackNo, albumQueue }: { song: Song; trackNo: number, albumQueue:Song[] }) => {
+const AlbumSongTile = ({ song, trackNo, albumQueue}: { song: Song; trackNo: number, albumQueue:Song[] }) => {
   const playSong = () => {
     window.electronAPI.queueUpdateQueueAndIndex(albumQueue, trackNo-1);
     console.log(song)
   }
   return (
-    <div className="items-center w-full p-1  rounded-xl hover:drop-shadow-xl hover:shadow-xl album-song-tile-styles">
+    <div className={`items-center w-full p-1 rounded-xl hover:drop-shadow-xl hover:shadow-xl album-song-tile-styles`}>
       <div className="flex album-song-tile-row-container flex-row gap-x-4 items-center">
         <div
           onClick={playSong}

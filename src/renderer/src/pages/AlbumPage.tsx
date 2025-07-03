@@ -19,13 +19,16 @@ export default function AlbumPage() {
         console.log(error)
       })
   }, [])
+
+  
+
   return (
     <div className="overflow-auto">
       <div className="fixed bottom-0 z-[8] album-page-more-content-fade h-[min(4rem,10vh)] w-full">
         {/* This is to add a gradient at the bottom of the viewport */}
       </div>
       <div>
-        <div className="min-h-screen flex flex-col bg-neutral-700 ">
+        <div className="min-h-screen flex flex-col bg-neutral-800 ">
           <div className="hidden lg:inline">
             <div
               className="w-full relative inline-flex"
@@ -47,7 +50,7 @@ export default function AlbumPage() {
                     }}
                   />
                   <div className="flex flex-col-reverse pl-4 flex-">
-                    <h1 className="album-title-name-shadow text-[min(4rem,max(10vh,2rem))] text-left  text-wrap overflow-hidden text-ellipsis font-semibold leading-[1.1] pb-1 tracking-tight drop-shadow-2xl inline-block">
+                    <h1 className="album-title-name-shadow text-left text-[min(4rem,max(10vh,2rem))]  text-wrap overflow-hidden text-ellipsis font-semibold leading-[1.1] pb-1 tracking-tight drop-shadow-2xl inline-block">
                       {album?.name}
                     </h1>
                   </div>
@@ -55,7 +58,7 @@ export default function AlbumPage() {
               </div>
             </div>
             <div className="h-16">
-              <h1 className="md:pl-[calc(2rem+min(40vh,20rem)+1rem+0.125rem)] opacity-70 leading-loose">
+              <h1 className="md:pl-[calc(2rem+min(40vh,20rem)+1rem)] opacity-70 text-left leading-loose text-nowrap text-ellipsis w-full overflow-x-hidden">
                 {album?.artists.join(", ")}
               </h1>
             </div>
@@ -85,9 +88,12 @@ export default function AlbumPage() {
                     <h1 className="album-title-name-shadow text-[min(4rem,max(8vh,2rem))] text-center  text-wrap overflow-hidden text-ellipsis font-semibold leading-[1.1] pb-1 tracking-tight drop-shadow-2xl inline-block">
                       {album?.name}
                     </h1>
-                    <h1 className="text text-center opacity-70 ">
+                    <div>
+                    <h1 className="text text-center opacity-70">
               {album?.artists.join(", ")}
             </h1>
+                    </div>
+                    
                   </div>
                   
                 </div>
@@ -103,7 +109,7 @@ export default function AlbumPage() {
               album.discs
                 .values()
                 .toArray()[0]
-                .map((song, index, array) => <AlbumSongTile albumQueue={array} song={song} trackNo={index + 1} />)
+                .map((song, index, array) => <AlbumSongTile  albumQueue={array} song={song} trackNo={index + 1} />)
             ) : (
               <div></div>
             )}

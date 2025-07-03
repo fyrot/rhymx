@@ -1,6 +1,6 @@
 import NavigationBarSpacer from "@renderer/components/NavigationBarSpacer"
 import { useNavigate } from "react-router"
-import { LuChevronRight, LuLibraryBig, LuTvMinimal } from "react-icons/lu"
+import { LuChevronRight, LuHammer, LuLibraryBig, LuTvMinimal } from "react-icons/lu"
 export default function PreferencesPage() {
   type PreferenceLink = {
     href: string
@@ -10,7 +10,8 @@ export default function PreferencesPage() {
   const navigation = useNavigate()
   const preferenceLinks: PreferenceLink[] = [
     { href: "/preferences/display", text: "Display", icon: <LuTvMinimal /> },
-    { href: "/preferences/library", text: "Library", icon: <LuLibraryBig />}
+    { href: "/preferences/library", text: "Library", icon: <LuLibraryBig />},
+    { href: "/preferences/plugins", text: "Plugins", icon: <LuHammer />}
   ]
   const navigateToPreference = (link: string) => {
     navigation(link);

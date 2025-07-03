@@ -18,8 +18,8 @@ export default function LibraryPage() {
         <NavigationBarSpacer accentGradient={false} />
         <div className="grow flex flex-col w-full items-center">
           <div className="p-4 w-full">
-            <h1>this is where the entire library can be accessed</h1>
-            <AlbumsCarousel albumList={allAlbumsCarouselContent} title={"Woaah"} />
+            {/*<h1>this is where the entire library can be accessed</h1>*/}
+            <AlbumsCarousel id="example" albumList={allAlbumsCarouselContent} title={"All Albums"} />
       
           </div>
           

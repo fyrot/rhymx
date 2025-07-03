@@ -121,9 +121,19 @@ html {
     border-radius: 1rem;
 }
 
+.accent-color-scrollbar-less-intrusive::-webkit-scrollbar-thumb {
+    background-color: rgba(var(--accent-color), 1.0);
+    border-radius: 9999px;
+}
+.accent-color-scrollbar-less-intrusive::-webkit-scrollbar {
+    height: 0.5rem;
+    border-radius: 9999px;
+    background-color: transparent;
+}
+
 .album-image-parallax-bar {
     background-color: rgba(0,0,0,0.25);
-    backdrop-filter: brightness(150%) saturate(125%) blur(1rem);
+    backdrop-filter: brightness(125%) saturate(125%) blur(1rem);
 }
 .album-song-tile-styles {
     background-color: rgba(0, 0, 0, 0.5);
@@ -162,27 +172,26 @@ html {
 }
 
 .audio-bar-container-background {
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: rgba(0, 0, 0, 0.5);
     backdrop-filter: brightness(75%) saturate(150%) blur(0.5rem);
-    filter: drop-shadow(0 0 0.5rem rgba(0,0,0,0.8))
+    box-shadow: 0 0 3rem rgba(255, 255, 255, 0.2)
 }
 
 
-html {
-  scrollbar-width: none;  /* Thin scrollbar */
-  scrollbar-color: transparent transparent; /* Transparent scrollbar */
+/*html {
+  scrollbar-width: none;  
+  scrollbar-color: transparent transparent; 
 }
 
-/* WebKit browsers (Chrome, Safari, Edge, etc.) */
 ::-webkit-scrollbar {
-  width: 0px; /* Or any other width you like */
+  width: 0px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent; /* Make the track transparent */
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
   background-color: transparent;
   border-radius: 0px;
-}
+}*/

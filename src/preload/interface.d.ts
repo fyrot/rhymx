@@ -16,7 +16,8 @@ export interface IElectronAPI {
     queueRetrieveCurrent: () => Promise<Song>,
     queueNotifyAudioBar: (callback) => void, 
     queueNotifyTrackEnded: () => void,
-    queueNotifySkipTracks: (tracksSkipped:number) => void
+    queueNotifySkipTracks: (tracksSkipped:number) => void,
+    pluginsAddSources: () => void
 }
 declare global {
     interface Window {

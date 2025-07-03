@@ -28,7 +28,9 @@ if (process.contextIsolated) {
       queueRetrieveCurrent: () => {return ipcRenderer.invoke("queue:retrieveCurrent");},
       queueNotifyAudioBar: (callback) => {ipcRenderer.on("queue:notifyAudioBar", (_event) => {callback()});},
       queueNotifyTrackEnded: () => {ipcRenderer.send("queue:notifyTrackEnded");},
-      queueNotifySkipTracks: (tracksSkipped: number) => {ipcRenderer.send("queue:notifySkipTracks", tracksSkipped);}
+      queueNotifySkipTracks: (tracksSkipped: number) => {ipcRenderer.send("queue:notifySkipTracks", tracksSkipped);},
+      pluginsAddSources: () => {ipcRenderer.send("plugins:addSources");}
+    
     })
   } catch (error) {
     console.log(error);

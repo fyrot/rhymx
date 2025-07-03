@@ -6,8 +6,12 @@ import * as fs from 'fs';
 import { LibraryManager } from './bgutils/LibraryManager';
 import { Album, Song } from './bgutils/songInformation';
 import { QueueManager } from './bgutils/QueueManager';
-
+import EventEmitter from 'events';
+//const events = require(`D:/Pro2jects/Electron/RhymxPlugins/discordrpc/plugin.js`)
 app.commandLine.appendSwitch("enable-features", "OverlayScrollbar")
+
+class PluginEmitter extends EventEmitter {}
+const pluginEmitter = new PluginEmitter();
 
 let libraryManager = new LibraryManager();
 let queueManager:QueueManager = new QueueManager();
@@ -18,6 +22,7 @@ libraryManager.startup();
 
 let globalMainWindow:BrowserWindow; 
 
+
 function closeWindow(event, shouldClose):void {
   const window = BrowserWindow.fromWebContents(event.sender);
   window?.close();
@@ -27,6 +32,7 @@ function queueNotifyAudioBar() {
   if (globalMainWindow !== undefined) {
     globalMainWindow.webContents.send("queue:notifyAudioBar");
   }
+  pluginEmitter.emit("pluginsCurrentlyPlayingChanged", {});
 }
 function queueNotifySkipTracks(event, tracksSkipped:number) {
   queueManager.skipTracks(tracksSkipped);
@@ -97,6 +103,31 @@ async function libraryRetrieveAlbumImageById(event, id):Promise<string> {
   console.log("id", id)
   return libraryManager.libraryRetrieveAlbumImageById(id) ?? "";
 }
+
+function pluginsAddSources(event):void {
+  dialog.showOpenDialog({
+
+    properties: ["openFile", "dontAddToRecent", "multiSelections"]
+      
+    }).then((response) => {
+      if (!response.canceled) {
+        for (const filePath of response.filePaths) {
+          const events = require(filePath);
+          for (const object of events.events) {
+            console.log(object);
+            pluginEmitter.on(object.eventName, (data) => {
+            console.log("plugin received");
+            object.callback(data);
+          });
+        }
+
+        }
+      }
+    })
+  }
+
+
+
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -185,8 +216,9 @@ app.whenReady().then(() => {
   ipcMain.handle("libraryRetrieve:albumImageById", libraryRetrieveAlbumImageById);
   ipcMain.on("queue:updateQueueAndIndex", queueUpdateQueueAndIndex);
   ipcMain.handle("queue:retrieveCurrent", queueRetrieveCurrent);
-  ipcMain.on("queue:notifyTrackEnded", queueNotifyTrackEnded)
+  ipcMain.on("queue:notifyTrackEnded", queueNotifyTrackEnded);
   ipcMain.on("queue:notifySkipTracks", queueNotifySkipTracks);
+  ipcMain.on("plugins:addSources", pluginsAddSources);
   createWindow()
 
   app.on('activate', function () {

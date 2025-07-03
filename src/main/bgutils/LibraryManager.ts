@@ -90,8 +90,11 @@ export class LibraryManager {
     }
     const usedDelimiters = [",", ";", "\0"];
     const defaultDelimiter = ",";
-    // ignore later commented out code, for reference
-    await Promise.all(songPathsUnique.map(songPath => new Promise<TagType>(function (resolve, reject) {
+    const promiseBatchSize = 200;
+    console.log("batch size: ", songPathsUnique.length/promiseBatchSize)
+    for (let i = 0; i < songPathsUnique.length/promiseBatchSize; i++) {
+      console.log("new batch");
+      await Promise.all(songPathsUnique.slice((i*promiseBatchSize), Math.min(songPathsUnique.length, (i+1)*promiseBatchSize)).map(songPath => new Promise<TagType>(function (resolve, reject) {
       jsmediatags.read(songPath, {
         onSuccess(data) {
           let albumName = data.tags.album ?? "Download";
@@ -143,6 +146,9 @@ export class LibraryManager {
         }
       })
     })));
+    
+    }
+    // ignore later commented out code, for reference
     
     /*for (const songPath of songPathsUnique) {
       const cheapTags = await new Promise<TagType>(function (resolve, reject) {
