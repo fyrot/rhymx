@@ -1,5 +1,10 @@
 import { Song } from "src/main/bgutils/songInformation"
 import { LuEllipsisVertical, LuPlay } from "react-icons/lu"
+function timeToMMSS(seconds: number):string {
+  const mm = Math.floor(seconds/60);
+  const ss = Math.round(seconds-(60*mm));
+  return mm.toString() + ":" + (ss < 10 ? "0" + ss.toString() : ss.toString());
+}
 const AlbumSongTile = ({ song, trackNo, albumQueue}: { song: Song; trackNo: number, albumQueue:Song[] }) => {
   const playSong = () => {
     window.electronAPI.queueUpdateQueueAndIndex(albumQueue, trackNo-1);
@@ -19,7 +24,7 @@ const AlbumSongTile = ({ song, trackNo, albumQueue}: { song: Song; trackNo: numb
         </div>
 
         <div className="hidden grow flex-row lg:flex">
-          <h1 className="leading-5 basis-1/2 grow font-semibold tracking-tight">{song.name}</h1>
+          <h1 className="leading-5 basis-1/2 grow line-clamp-1 font-semibold tracking-tight">{song.name}</h1>
           <h1 className="leading-5 basis-1/2 grow font-light text-sm">{song.artists.join(", ")}</h1>
           
         </div>
@@ -27,7 +32,7 @@ const AlbumSongTile = ({ song, trackNo, albumQueue}: { song: Song; trackNo: numb
         <div className="inline-flex grow flex-row lg:hidden">
           
             <div className="flex flex-col">
-            <h1 className="leading-5  font-semibold">{song.name}</h1>
+            <h1 className="leading-5 line-clamp-1 font-semibold">{song.name}</h1>
             <h1 className="leading-5 text-sm">{song.artists.join(", ")}</h1>
           </div>
           <div className="grow" />
@@ -35,7 +40,7 @@ const AlbumSongTile = ({ song, trackNo, albumQueue}: { song: Song; trackNo: numb
         </div>
 
         <div>
-          <h1>time goes here</h1>
+          <h1>{timeToMMSS(song.duration)}</h1>
         </div>
         <div className="album-ell-hide-on-tile-hover">
           <LuEllipsisVertical className="text-xl" />

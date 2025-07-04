@@ -18,13 +18,13 @@ export default function AlbumPage() {
       .catch((error) => {
         console.log(error)
       })
-  }, [])
+  }, [abc])
 
   
 
   return (
     <div className="overflow-auto">
-      <div className="fixed bottom-0 z-[8] album-page-more-content-fade h-[min(4rem,10vh)] w-full">
+      <div className="fixed bottom-0 z-[8] pointer-events-none album-page-more-content-fade h-[min(4rem,10vh)] w-full">
         {/* This is to add a gradient at the bottom of the viewport */}
       </div>
       <div>
@@ -116,6 +116,9 @@ export default function AlbumPage() {
           </div>
 
           <NavigationBarSpacer accentGradient={false} />
+          
+          <NavigationBarSpacer accentGradient={false} />
+          
         </div>
       </div>
     </div>

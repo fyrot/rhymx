@@ -1,3 +1,4 @@
+import { LRCData } from "../main/bgutils/LRCParserUtils";
 import { Album, Song } from "../main/bgutils/songInformation";
 export interface IElectronAPI {
     closeWindow: (shouldClose: boolean) => void,
@@ -12,8 +13,10 @@ export interface IElectronAPI {
     libraryRetrieveAllAlbums: () => Promise<Album[]>,
     libraryRetrieveAlbumById: (id: string) => Promise<Album | undefined>,
     libraryRetrieveAlbumImageById: (id: string) => Promise<string>,
+    libraryRetrieveAlbumNameById: (id:string) => Promise<string>,
     queueUpdateQueueAndIndex: (newQueue: Song[], newIndex: number) => void,
     queueRetrieveCurrent: () => Promise<Song>,
+    queueRetrieveCurrentLRC: (filePath:string) => Promise<LRCData>,
     queueNotifyAudioBar: (callback) => void, 
     queueNotifyTrackEnded: () => void,
     queueNotifySkipTracks: (tracksSkipped:number) => void,

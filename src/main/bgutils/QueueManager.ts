@@ -1,4 +1,8 @@
+import { readFile, readFileSync } from "fs";
+import { parseLRC } from "./LRCParser";
+import { LRCData } from "./LRCParserUtils";
 import { Song } from "./songInformation";
+import { join, parse } from "path";
 
 export class QueueManager {
   queueList: Song[];
@@ -33,6 +37,15 @@ export class QueueManager {
       console.log("The queue index is not synced with the queue -- someone wrote bad code");
       return this.dummySong;
     }
+  }
+  retrieveCurrentLRC(filePath:string):LRCData {
+    let lrcPath = filePath;
+    if (!filePath.endsWith(".lrc")) {
+      const parsedPath = parse(filePath);
+      lrcPath = join(parsedPath.dir, parsedPath.name) + ".lrc";
+    
+    }
+    return parseLRC(readFileSync(lrcPath).toString());
   }
   trackEnded():void {
     this.goToNextTrack();

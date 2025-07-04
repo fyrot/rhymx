@@ -4,7 +4,9 @@ export interface Song {
   filePath: string,
   trackNo: number,
   songId: string,
-  albumRefId: string
+  albumRefId: string,
+  duration: number,
+  hasLRC: boolean
 }
 export interface Album {
   name: string,
@@ -15,4 +17,9 @@ export interface Album {
     dataUrl: string
   },
   albumId: string
+}
+export interface AudioBarSong {
+  song: Song,
+  albumName: string,
+  albumImage: string
 }

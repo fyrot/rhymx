@@ -1,10 +1,12 @@
 import * as fs from "fs"
 import { app } from "electron"
-import { join, extname, basename } from "path"
-import { Song, Album } from "./songInformation"
+import { join, extname, basename, format, parse } from "path"
+import { Song, Album, AudioBarSong } from "./songInformation"
 import * as jsmediatags from "jsmediatags"
 import { TagType } from "jsmediatags/types"
-
+import { parseFile } from "music-metadata"
+import { parseLRC } from "./LRCParser"
+import { LyricInfo, LRCData } from "./LRCParserUtils"
 export class LibraryManager {
   folderPaths: string[]
   audioFileFormats: Set<string> = new Set<string>([".mp3", ".flac"])
@@ -88,13 +90,73 @@ export class LibraryManager {
       let unsanitizedSplit = splitString.split(defaultDelimiter);
       return unsanitizedSplit.filter((value) => value.trim().length > 0);
     }
-    const usedDelimiters = [",", ";", "\0"];
+    const usedDelimiters = [",", ";", "\0", "\\", "/"];
     const defaultDelimiter = ",";
     const promiseBatchSize = 200;
     console.log("batch size: ", songPathsUnique.length/promiseBatchSize)
     for (let i = 0; i < songPathsUnique.length/promiseBatchSize; i++) {
       console.log("new batch");
-      await Promise.all(songPathsUnique.slice((i*promiseBatchSize), Math.min(songPathsUnique.length, (i+1)*promiseBatchSize)).map(songPath => new Promise<TagType>(function (resolve, reject) {
+      await Promise.all(songPathsUnique.slice((i*promiseBatchSize), Math.min(songPathsUnique.length, ((i+1)*promiseBatchSize))).map((filePath) => new Promise<void>(function (resolve, reject) {
+        parseFile(filePath, {duration: true}).then((metadata) => {
+          const albumName = metadata.common.album ?? "Download";
+          const songDuration = metadata.format.duration;
+
+          if (!albumNameToIndex.has(albumName)) {
+            const newIndex = albumList.length;
+            const newAlbum = <Album>{
+              name: albumName,
+              artists: [],
+              discs: new Map<string, Song[]>(),
+              albumImage: {
+                hasData: false,
+                dataUrl: ""
+              },
+              albumId: ""
+            }
+            albumList.push(newAlbum);
+            console.log("pushed album")
+            albumNameToIndex.set(albumName, newIndex);
+          }
+          const currentAlbum = albumList[albumNameToIndex.get(albumName)!];
+          if (!currentAlbum.albumImage.hasData && (metadata.common.picture && metadata.common.picture.length > 0)) {
+            const format = metadata.common.picture[0].format;
+            const base64string = Buffer.from(metadata.common.picture[0].data).toString("base64");
+            currentAlbum.albumImage.hasData = true;
+            currentAlbum.albumImage.dataUrl = `data:${format};base64,${base64string}`;
+            console.log("i'd log the picture here");
+          }
+          const discNumber = metadata.common.disk.no ?? 1
+          const discNumberString = discNumber.toString();
+          if (!currentAlbum.discs.has(discNumberString)) {
+            currentAlbum.discs.set(discNumberString, []);
+          }
+          const parsedPath = parse(filePath);
+          const lrcPath = join(parsedPath.dir, parsedPath.name) + ".lrc";
+          //console.log(lrcPath)
+          const lrcAttachmentExists = fs.existsSync(lrcPath);
+          //if (fs.existsSync(lrcPath)) {
+          //  console.log("lrc file exists");
+          //  parseLRC(fs.readFileSync(lrcPath, {encoding: "utf8", flag: "r"}));
+          //}
+          let processedArtists:string[] = sanitizedMultiSplit(usedDelimiters, defaultDelimiter, (metadata.common.artists ?? ["Unknown"]).join(", "))
+          const song = <Song>{
+            name: metadata.common.title ?? basename(filePath, extname(filePath)),
+            trackNo: metadata.common.track.no ?? 1,
+            artists: processedArtists,
+            albumRefId: albumName,
+            filePath: filePath,
+            songId: "",
+            duration: metadata.format.duration ?? 0,
+            hasLRC: lrcAttachmentExists
+          }
+          currentAlbum.discs.get(discNumberString)?.push(song);
+          // trying porting the later stuff and see what happens
+          resolve();
+        }).catch((error) => {console.log(error);reject();});
+      }
+      )))
+      
+      /*await Promise.all(songPathsUnique.slice((i*promiseBatchSize), Math.min(songPathsUnique.length, (i+1)*promiseBatchSize)).map(songPath => new Promise<TagType>(function (resolve, reject) {
       jsmediatags.read(songPath, {
         onSuccess(data) {
           let albumName = data.tags.album ?? "Download";
@@ -117,12 +179,13 @@ export class LibraryManager {
             albumNameToIndex.set(albumName, newIndex);
           }
           let albumItem = albumList[albumNameToIndex.get(albumName)!];
-          if (albumItem.albumImage.dataUrl.length == 0 && (data.tags.picture?.data !== undefined && data.tags.picture.data.length > 0)) {
+          if ((!albumItem.albumImage.hasData) && (data.tags.picture?.data !== undefined && data.tags.picture.data.length > 0)) {
             console.log("Album art found!!");
             //console.log(data.tags.picture.data);
             const imageFormat = data.tags.picture.format;
             const base64string = Buffer.from(new Uint8Array(data.tags.picture.data)).toString("base64");
             albumItem.albumImage.dataUrl = `data:${imageFormat};base64,${base64string}`;
+            albumItem.albumImage.hasData = true;
           }
           // ignoring possibility of null here w/ the ! operator, be wary
           if (!albumItem.discs.has(discNumber)) {
@@ -145,7 +208,8 @@ export class LibraryManager {
           reject(error)
         }
       })
-    })));
+    }
+    )));*/
     
     }
     // ignore later commented out code, for reference
@@ -338,5 +402,8 @@ export class LibraryManager {
   }
   libraryRetrieveAlbumImageById(id: string):string | undefined {
     return this.albumLibrary.get(id)?.albumImage.dataUrl;
+  }
+  libraryRetrieveAlbumNameById(id:string):string | undefined {
+    return this.albumLibrary.get(id)?.name;
   }
 }

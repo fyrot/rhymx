@@ -1,5 +1,5 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
-import { join } from 'path'
+import { join, parse } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import * as fs from 'fs';
@@ -7,7 +7,7 @@ import { LibraryManager } from './bgutils/LibraryManager';
 import { Album, Song } from './bgutils/songInformation';
 import { QueueManager } from './bgutils/QueueManager';
 import EventEmitter from 'events';
-//const events = require(`D:/Pro2jects/Electron/RhymxPlugins/discordrpc/plugin.js`)
+import { LRCData } from './bgutils/LRCParserUtils';
 app.commandLine.appendSwitch("enable-features", "OverlayScrollbar")
 
 class PluginEmitter extends EventEmitter {}
@@ -32,7 +32,7 @@ function queueNotifyAudioBar() {
   if (globalMainWindow !== undefined) {
     globalMainWindow.webContents.send("queue:notifyAudioBar");
   }
-  pluginEmitter.emit("pluginsCurrentlyPlayingChanged", {});
+  pluginEmitter.emit("pluginEvents:currentlyPlayingChanged", queueManager.retrieveCurrent());
 }
 function queueNotifySkipTracks(event, tracksSkipped:number) {
   queueManager.skipTracks(tracksSkipped);
@@ -50,6 +50,13 @@ function queueUpdateQueueAndIndex(event, newQueue:Song[], newIndex:number):void 
 // invokes HAVE to be async
 async function queueRetrieveCurrent(event):Promise<Song> {
   return queueManager.retrieveCurrent();
+}
+async function queueRetrieveCurrentLRC(event, filePath:string):Promise<LRCData> {
+  console.log(filePath);
+  const parsedPath = parse(filePath);
+  const lrcPath = join(parsedPath.dir, parsedPath.name) + ".lrc";
+  return queueManager.retrieveCurrentLRC(lrcPath);
+    
 }
 function queueNotifyTrackEnded(event) {
   queueManager.trackEnded();
@@ -103,6 +110,10 @@ async function libraryRetrieveAlbumImageById(event, id):Promise<string> {
   console.log("id", id)
   return libraryManager.libraryRetrieveAlbumImageById(id) ?? "";
 }
+async function libraryRetrieveAlbumNameById(event, id):Promise<string> {
+  console.log("retrieving name w/ id", id);
+  return libraryManager.libraryRetrieveAlbumNameById(id) ?? "blah";
+}
 
 function pluginsAddSources(event):void {
   dialog.showOpenDialog({
@@ -113,11 +124,11 @@ function pluginsAddSources(event):void {
       if (!response.canceled) {
         for (const filePath of response.filePaths) {
           const events = require(filePath);
-          for (const object of events.events) {
-            console.log(object);
-            pluginEmitter.on(object.eventName, (data) => {
+          for (const eventPair of events.events) {
+            console.log(eventPair);
+            pluginEmitter.on(eventPair.eventName, (data) => {
             console.log("plugin received");
-            object.callback(data);
+            eventPair.callback(data);
           });
         }
 
@@ -214,8 +225,10 @@ app.whenReady().then(() => {
   ipcMain.handle("libraryRetrieve:allAlbums", libraryRetrieveAllAlbums);
   ipcMain.handle("libraryRetrieve:albumById", libraryRetrieveAlbumById);
   ipcMain.handle("libraryRetrieve:albumImageById", libraryRetrieveAlbumImageById);
+  ipcMain.handle("libraryRetrieve:albumNameById", libraryRetrieveAlbumNameById);
   ipcMain.on("queue:updateQueueAndIndex", queueUpdateQueueAndIndex);
   ipcMain.handle("queue:retrieveCurrent", queueRetrieveCurrent);
+  ipcMain.handle("queue:retrieveCurrentLRC", queueRetrieveCurrentLRC);
   ipcMain.on("queue:notifyTrackEnded", queueNotifyTrackEnded);
   ipcMain.on("queue:notifySkipTracks", queueNotifySkipTracks);
   ipcMain.on("plugins:addSources", pluginsAddSources);
