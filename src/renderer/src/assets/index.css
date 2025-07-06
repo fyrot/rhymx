@@ -188,16 +188,13 @@ html {
 
 .audio-bar-container-background {
     background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: brightness(75%) saturate(150%) blur(0.5rem);
-    
-    box-shadow: 0 0 3rem rgba(255, 255, 255, 0.2)
 }
 .audio-bar-currently-playing-container-background {
     background-color: rgba(0, 0, 0, 1.0);
     
 }
 .audio-bar-currently-playing-image-blur {
-    backdrop-filter: brightness(70%) saturate(125%) blur(0.5rem);
+    backdrop-filter: brightness(75%) saturate(125%) blur(7rem);
 }
 .audio-bar-currently-playing-image-shadow {
     
@@ -222,7 +219,8 @@ html {
 	background-size: 100% 3px;
 	background-position: 0 100%
 }
-
+.audio-bar-container {
+}
 
 /*html {
   scrollbar-width: none;  

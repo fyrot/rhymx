@@ -1,5 +1,5 @@
 import { LRCData } from "../main/bgutils/LRCParserUtils";
-import { Album, Song } from "../main/bgutils/songInformation";
+import { Album, Song, AudioBarSong } from "../main/bgutils/songInformation";
 export interface IElectronAPI {
     closeWindow: (shouldClose: boolean) => void,
     toggleMaximizeWindow: () => void,
@@ -14,12 +14,16 @@ export interface IElectronAPI {
     libraryRetrieveAlbumById: (id: string) => Promise<Album | undefined>,
     libraryRetrieveAlbumImageById: (id: string) => Promise<string>,
     libraryRetrieveAlbumNameById: (id:string) => Promise<string>,
-    queueUpdateQueueAndIndex: (newQueue: Song[], newIndex: number) => void,
-    queueRetrieveCurrent: () => Promise<Song>,
+    queueUpdateQueueAndIndex: (newQueue: AudioBarSong[], newIndex: number) => void,
+    queueUpdateAddToQueue: (newSong: AudioBarSong) => void,
+    queueRetrieveCurrent: () => Promise<[AudioBarSong, number]>,
     queueRetrieveCurrentLRC: (filePath:string) => Promise<LRCData>,
     queueNotifyAudioBar: (callback) => void, 
+    queueNotifyAudioBarQueue: (callback) => void,
     queueNotifyTrackEnded: () => void,
     queueNotifySkipTracks: (tracksSkipped:number) => void,
+    currentlyPlayingUpdateVisibility: (visibility:boolean) => void,
+    currentlyPlayingReceiveVisibility: (callback) => void,
     pluginsAddSources: () => void
 }
 declare global {

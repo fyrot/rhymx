@@ -40,7 +40,7 @@ const NavigationBar = () => {
   //console.log(navigationPosition.pathname);
   //console.log(navigationHistoryExists);
   return (
-    <div className="w-full draggable-appbar p-2 h-14 z-50 fixed flex flex-row justify-center items-center">
+    <div className="w-full draggable-appbar p-2 h-14 z-10 fixed flex flex-row justify-center items-center transform-gpu">
       
       <div className="flex flex-row transition-all  duration-300 items-center bg-black-translucent rounded-full">
         <div className={`${navigationHistoryExists ? "w-12" : "w-0"} overflow-hidden transition-all duration-300 ease-out flex flex-row`}>
@@ -57,7 +57,7 @@ const NavigationBar = () => {
             <>
             {mainNavigationLinks.map((link) => (
               
-              <div onClick={() => {navigateToPage(link.href)}} className="w-12 items-center py-2 navigation-bar-icon-bg rounded-full none-draggable-appbar justify-center flex">
+              <div onClick={() => {navigateToPage(link.href)}} key={link.name} className="w-12 items-center py-2 navigation-bar-icon-bg rounded-full none-draggable-appbar justify-center flex">
                 <span className={`text-xl grow none-draggable-appbar flex items-center justify-center ${navigationPosition.pathname == link.href ? "text-white" : "navigation-bar-icon"}`}>{link.icon}</span>
               </div>
               

@@ -1,41 +1,48 @@
 import { readFile, readFileSync } from "fs";
 import { parseLRC } from "./LRCParser";
 import { LRCData } from "./LRCParserUtils";
-import { Song } from "./songInformation";
+import { AudioBarSong, Song } from "./songInformation";
 import { join, parse } from "path";
 
 export class QueueManager {
-  queueList: Song[];
+  queueList: AudioBarSong[];
   queueIndex: number;
-  dummySong = <Song>{
-    name: "Error",
-    albumRefId: "none",
-    artists: ["fyrot"],
-    filePath: "https://www.youtube.com/watch?v=CQeezCdF4mk",
-    songId: "none",
-    trackNo: -1
+  dummySong = <AudioBarSong>{
+    song: <Song>{
+      name: "Error",
+      albumRefId: "none",
+      artists: ["fyrot"],
+      filePath: "https://www.youtube.com/watch?v=CQeezCdF4mk",
+      songId: "none",
+      trackNo: -1
+    },
+    albumName: "This Doesn't Exist",
+    albumImage: {
+      hasData: false,
+      dataUrl: ""
+    } 
   }
   // perhaps implement preferences for playback [loop, shuffle, autoplay(?)] here
-  constructor(queueData?:Song[], queueIndex?:number) {
+  constructor(queueData?:AudioBarSong[], queueIndex?:number) {
     this.queueList = queueData ?? []; // undefined check
     this.queueIndex = queueIndex ?? (this.queueList.length > 0 ? 0 : -1);
   }
-  updateQueue(newQueue:Song[]):void {
+  updateQueue(newQueue:AudioBarSong[]):void {
     this.queueList = newQueue;
     this.queueIndex = 0;
   }
   updateIndex(newIndex:number):void {
     this.queueIndex = (newIndex < this.queueList.length && newIndex > -1 ? newIndex : 0);
   }
-  addToQueue(...newSongs:Song[]):void {
+  addToQueue(...newSongs:AudioBarSong[]):void {
     this.queueList.push(...newSongs);
   }
-  retrieveCurrent():Song {
+  retrieveCurrent():[AudioBarSong, number] {
     try {
-      return this.queueList[this.queueIndex];
+      return [this.queueList[this.queueIndex], this.queueIndex];
     } catch (error) {
       console.log("The queue index is not synced with the queue -- someone wrote bad code");
-      return this.dummySong;
+      return [this.dummySong, 0];
     }
   }
   retrieveCurrentLRC(filePath:string):LRCData {
@@ -46,6 +53,9 @@ export class QueueManager {
     
     }
     return parseLRC(readFileSync(lrcPath).toString());
+  }
+  retrieveQueue():AudioBarSong[] {
+    return this.queueList;
   }
   trackEnded():void {
     this.goToNextTrack();

@@ -4,7 +4,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import * as fs from 'fs';
 import { LibraryManager } from './bgutils/LibraryManager';
-import { Album, Song } from './bgutils/songInformation';
+import { Album, AudioBarSong, Song } from './bgutils/songInformation';
 import { QueueManager } from './bgutils/QueueManager';
 import EventEmitter from 'events';
 import { LRCData } from './bgutils/LRCParserUtils';
@@ -39,16 +39,21 @@ function queueNotifySkipTracks(event, tracksSkipped:number) {
   queueNotifyAudioBar();
 }
 
-function queueUpdateQueueAndIndex(event, newQueue:Song[], newIndex:number):void {
+function queueUpdateQueueAndIndex(event, newQueue:AudioBarSong[], newIndex:number):void {
   console.log("received queue and index");
   queueManager.updateQueue(newQueue);
   queueManager.updateIndex(newIndex)
   queueNotifyAudioBar();
+  globalMainWindow.webContents.send("queue:notifyAudioBarQueue", queueManager.retrieveQueue());
+}
+function queueUpdateAddToQueue(event, newSong:AudioBarSong):void {
+  queueManager.addToQueue(newSong);
+  globalMainWindow.webContents.send("queue:notifyAudioBarQueue", queueManager.retrieveQueue());
+
 }
 
-
 // invokes HAVE to be async
-async function queueRetrieveCurrent(event):Promise<Song> {
+async function queueRetrieveCurrent(event):Promise<[AudioBarSong, number]> {
   return queueManager.retrieveCurrent();
 }
 async function queueRetrieveCurrentLRC(event, filePath:string):Promise<LRCData> {
@@ -58,9 +63,16 @@ async function queueRetrieveCurrentLRC(event, filePath:string):Promise<LRCData> 
   return queueManager.retrieveCurrentLRC(lrcPath);
     
 }
+async function queueRetrieveQueue(event):Promise<AudioBarSong[]> {
+  return queueManager.retrieveQueue();
+}
 function queueNotifyTrackEnded(event) {
   queueManager.trackEnded();
   queueNotifyAudioBar();
+}
+function currentlyPlayingUpdateVisibility(event, visibility: boolean):void {
+  console.log("received update visibility");
+  globalMainWindow.webContents.send("currentlyPlaying:receiveVisibility", visibility);
 }
 
 function toggleMaximizeWindow(event):void {
@@ -163,6 +175,7 @@ function createWindow(): void {
   
   mainWindow.webContents.on("did-finish-load", () => {
     globalMainWindow = mainWindow;
+    mainWindow.webContents.openDevTools();
   });
 // if permissions are behaving weirdly, double check effects of sandbox + context isolation
   mainWindow.on('ready-to-show', () => {
@@ -227,10 +240,13 @@ app.whenReady().then(() => {
   ipcMain.handle("libraryRetrieve:albumImageById", libraryRetrieveAlbumImageById);
   ipcMain.handle("libraryRetrieve:albumNameById", libraryRetrieveAlbumNameById);
   ipcMain.on("queue:updateQueueAndIndex", queueUpdateQueueAndIndex);
+  ipcMain.on("queue:updateAddToQueue", queueUpdateAddToQueue);
   ipcMain.handle("queue:retrieveCurrent", queueRetrieveCurrent);
   ipcMain.handle("queue:retrieveCurrentLRC", queueRetrieveCurrentLRC);
+  ipcMain.handle("queue:retrieveQueue", queueRetrieveQueue);
   ipcMain.on("queue:notifyTrackEnded", queueNotifyTrackEnded);
   ipcMain.on("queue:notifySkipTracks", queueNotifySkipTracks);
+  ipcMain.on("currentlyPlaying:updateVisibility", currentlyPlayingUpdateVisibility);
   ipcMain.on("plugins:addSources", pluginsAddSources);
   createWindow()
 

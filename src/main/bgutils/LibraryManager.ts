@@ -149,6 +149,7 @@ export class LibraryManager {
             duration: metadata.format.duration ?? 0,
             hasLRC: lrcAttachmentExists
           }
+          console.log(song.filePath);
           currentAlbum.discs.get(discNumberString)?.push(song);
           // trying porting the later stuff and see what happens
           resolve();
@@ -387,6 +388,7 @@ export class LibraryManager {
           })
           
           }
+          console.log(album.discs.get("1")?.length);
           album.artists = artistSet.values().toArray();
         }
       }

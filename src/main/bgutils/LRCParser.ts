@@ -24,7 +24,7 @@ export function parseLRC(textFile: string) {
     lyrics: []
   };
   const lines = textFile.split(lineEndingRE);
-  console.log("lines", lines.length)
+  //console.log("lines", lines.length)
   const metadataLines = lines.filter(line => metadataRE.test(line));
   for (const metadataLine of metadataLines) {
     const parsedMetadata = parseMetadataBrackets(metadataLine);
@@ -48,7 +48,7 @@ export function parseLRC(textFile: string) {
     }
     preprocessedLyrics.push(section);
   })
-  console.log(preprocessedLyrics[0]);
+  //console.log(preprocessedLyrics[0]);
   //process durations
   preprocessedLyrics.forEach((lyricBatch, lyricBatchIndex) => {
     for (let lyricIndex = 0; lyricIndex < lyricBatch.length-1; lyricIndex++) {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState, Suspense, lazy } from "react"
 import {
   LuMicVocal,
   LuMusic3,
@@ -8,24 +8,30 @@ import {
   LuSkipForward,
   LuStretchHorizontal
 } from "react-icons/lu"
-import { useNavigate } from "react-router"
-import { Song } from "src/main/bgutils/songInformation"
+import { useLocation, useNavigate } from "react-router"
+import { AudioBarSong, Song } from "src/main/bgutils/songInformation"
 import { LRCData, LyricInfo } from "src/main/bgutils/LRCParserUtils"
+import NavigationBarSpacer from "./NavigationBarSpacer"
+const AudioBarQueueTile = lazy(() => import("./AudioBarQueueTile"))
 
 const AudioBar = () => {
   const [songInformation, updateSongInformation] = useState<Song>()
+  const [currentQueueIndex, updateCurrentQueueIndex] = useState<number>(0);
+  const [currentQueue, updateCurrentQueue] = useState<AudioBarSong[]>();
   const [albumName, updateAlbumName] = useState<string>("")
   const navigate = useNavigate()
-
+  const location = useLocation();
   const [currentImage, updateCurrentImage] = useState<string>("")
+  const [currentLyrics, updateCurrentLyrics] = useState<LRCData>();
   const [playing, updatePlaying] = useState<boolean>(false)
   const [progressBarWidth, updateProgressBarWidth] = useState<string>("0%")
   const [progressBarTransitionDuration, updateProgressBarTransitionDuration] =
     useState<string>("10s")
   const [showCurrentlyPlayingScreen, updateShowCurrentlyPlayingScreen] = useState<boolean>(false)
-  const [showQueueScreen, updateShowQueueScreen] = useState<boolean>(false)
-  const audioElement = useRef<HTMLAudioElement>(null)
+  const audioElement = useRef<HTMLAudioElement | null>(null)
   const progressBar = useRef<HTMLDivElement>(null)
+  const [currentTime, updateCurrentTime] = useState(0);
+  const isScrolling = useRef(false)
   useEffect(() => {
     if ("mediaSession" in navigator) {
       navigator.mediaSession.setActionHandler("nexttrack", (action) => {
@@ -44,53 +50,96 @@ const AudioBar = () => {
         toggleTrackPlaying()
       })
     }
+    
     window.electronAPI.queueNotifyAudioBar(async () => {
-      console.log("got notification")
-      const newSong = await window.electronAPI.queueRetrieveCurrent()
-      const newSongAlbumName = await window.electronAPI.libraryRetrieveAlbumNameById(
-        newSong.albumRefId
-      )
-      const newImage = await window.electronAPI.libraryRetrieveAlbumImageById(newSong.albumRefId)
-
+      const [newSong, queueIndex] = await window.electronAPI.queueRetrieveCurrent();
+      if (!newSong) {return;}
+      updateCurrentQueueIndex(queueIndex);
+      
       if ("mediaSession" in navigator) {
         let trackDetails: any = {}
-        trackDetails.title = newSong.name
-        trackDetails.artist = newSong.artists.join(", ")
+        trackDetails.title = newSong.song.name
+        trackDetails.artist = newSong.song.artists.join(", ")
         navigator.mediaSession.metadata = new MediaMetadata(trackDetails)
       }
-
-      updateAlbumName(newSongAlbumName)
+      
+      updateAlbumName(newSong.albumName)
       console.log(newSong)
-      updateSongInformation(newSong)
-      updateCurrentImage(newImage)
-      updateProgressBar(0, true)
+      updateSongInformation(newSong.song)
+      updateCurrentImage(newSong.albumImage.dataUrl)
+      console.log("got notification")
+      
+      //updateProgressBar(0, true);
+    });
+    window.electronAPI.queueNotifyAudioBarQueue(async (newQueue:AudioBarSong[]) => {
+      if (!songInformation) {
+        updateSongInformation(newQueue[0].song)
+        updateCurrentQueueIndex(0);
+        updateCurrentImage(newQueue[0].albumImage.dataUrl)
+        updateAlbumName(newQueue[0].albumName)
+        if ("mediaSession" in navigator) {
+        let trackDetails: any = {}
+        trackDetails.title = newQueue[0].song.name
+        trackDetails.artist = newQueue[0].song.artists.join(", ")
+        navigator.mediaSession.metadata = new MediaMetadata(trackDetails)
+      }
+      }
+      updateCurrentQueue(newQueue);
     })
   }, [])
-  
+  useEffect(() => {
+    updateShowCurrentlyPlayingScreen(false);
+  }, [location])
+  useEffect(() => {
+    if (songInformation && songInformation.hasLRC) {
+        window.electronAPI.queueRetrieveCurrentLRC(songInformation.filePath).then((newLRCData) => {
+          updateCurrentLyrics(newLRCData);  
+          console.log(newLRCData);
+        }).catch((error) => {console.log("wow")});
+        
+      } else {
+        updateCurrentLyrics(undefined);
+      }
+  }, [songInformation])
+
+  useEffect(() => {
+    const audioTag = audioElement.current;
+    if (!audioTag) {return}
+    console.log("audio tag exists");
+    const updateTimeEvent = () => {
+      //console.log(audioTag.currentTime);
+      updateCurrentTime(audioTag.currentTime);
+    }
+    audioTag.addEventListener("timeupdate", updateTimeEvent);
+    return () => audioTag.removeEventListener("timeupdate", updateTimeEvent);
+  }, [])
+
+  useEffect(() => {
+    window.electronAPI.currentlyPlayingUpdateVisibility(
+      showCurrentlyPlayingScreen
+    )
+  }, [showCurrentlyPlayingScreen])
   const navigateToAlbum = () => {
     console.log("navigating to album")
     setTimeout(() => {
       if (songInformation) {
         navigate(`/album?id=${songInformation.albumRefId}`)
-        // clearly they're navigating for something
-        updateShowCurrentlyPlayingScreen(false)
-        updateShowQueueScreen(false)
       }
     }, 0)
   }
   const playTrack = () => {
     audioElement.current?.play()
 
-    updateProgressBar(0, true)
+    //updateProgressBar(0, true)
   }
   const toggleTrackPlaying = () => {
     if (audioElement.current) {
       if (audioElement.current.paused) {
         audioElement.current.play()
-        updateProgressBar(audioElement.current.currentTime, true)
+        //updateProgressBar(audioElement.current.currentTime, true)
       } else {
         audioElement.current.pause()
-        updateProgressBar(audioElement.current.currentTime, false)
+        //updateProgressBar(audioElement.current.currentTime, false)
       }
       console.log("position", audioElement.current?.currentTime)
     }
@@ -112,7 +161,7 @@ const AudioBar = () => {
   const updateProgressBar = (newPosition: number, startAnimation: boolean) => {
     if (progressBar.current && audioElement.current) {
       updateProgressBarWidth(((100 * newPosition) / audioElement.current.duration).toString() + "%")
-      updateProgressBarTransitionDuration(newPosition.toString() + "s")
+      updateProgressBarTransitionDuration("0" + "s")
       if (startAnimation) {
         asynchronousUpdateProgressBar(newPosition)
       }
@@ -129,52 +178,81 @@ const AudioBar = () => {
       }
     }, 100)
   }
+  const seekToPosition = (newPosition: number) => {
+    if (!audioElement.current) {return;}
+    updateProgressBar(newPosition, true);
+    audioElement.current.currentTime = newPosition;
+    
+  }
   return (
-    <div className={`fixed bottom-6 flex flex-col`}>
-      <div
-        className={`transition-all duration-150 self-center rounded-2xl mb-2 audio-bar-currently-playing-container-background w-[calc(100vw-3rem)] flex flex-row ${showCurrentlyPlayingScreen || showQueueScreen ? "h-[calc(100vh-3rem-4rem-3.5rem)] p-2" : "h-0 p-0"}`}
-      >
-        {" "}
-        {/** "w-0 p-0" : "w-[calc(100vw-3rem)] p-2 py-3" */}
-        <div
-          className={`transition-all basis-0 duration-300 overflow-hidden min-w-0 ease-out ${showCurrentlyPlayingScreen ? "grow-[2]" : "w-0 grow-0"} flex`}
-        >
-          <div
-            className="grow rounded-2xl w-full h-full shadow-2xl bg-clip-border drop-shadow-2xl flex"
-            style={{
-              background: "#ff0000"
-            }}
-          >
-            <div className="audio-bar-currently-playing-image-blur rounded-2xl bg-clip-border grow flex flex-col items-center justify-center overflow-hidden">
-              {/* This is where the lyrics display goes */}  
-              {/* This is where the lyrics display ends */}
-            </div>
-          </div>
-        </div>
-        <div
-          className={`transition-all basis-0 duration-300 ease-out flex flex-row min-w-0 overflow-clip ${showQueueScreen ? "grow" : "grow-0"}`}
-        >
-          {showCurrentlyPlayingScreen ? (
-            <div
-              className={`transition-all duration-300 flex-shrink ease-out ${showQueueScreen ? "grow-0" : "grow"}`}
-            ></div>
-          ) : (
-            <div />
-          )}
+    <div className={`audio-bar-container flex  flex-col p-0`}>
+      {/* gpu usage bottom 6 left 0 went crazy down using position absolute instead of fixed lol */}
+      
+      <div className={`transition-all flex bg-neutral-800 flex-col  ${showCurrentlyPlayingScreen ? "h-[calc(100vh-5rem-max(2px,.125rem))]" : "h-0"}`}>
+        <NavigationBarSpacer accentGradient={false} />
+        <div className="grow overflow-hidden flex-shrink flex px-4 pb-3 pt-0 flex-row">
+          <div className={`grow-[2] basis-0 overflow-hidden flex min-w-0 rounded-2xl`} style={{background: `url(${currentImage})`, backgroundSize: "100% 100%", backgroundPosition: "center", backgroundAttachment: "fixed", backgroundRepeat: "space"}}>
+            <div className={`grow  rounded-2xl p-2 flex flex-col audio-bar-currently-playing-image-blur items-center overflow-y-auto ${!songInformation?.hasLRC ? "justify-center" : ""}`}>
+              <br />
+              {!songInformation?.hasLRC ? <div
+                    className={`w-[min(40vw,40vh,24rem)] h-[min(40vw,40vh,24rem)]  flex-shrink-0 rounded-xl shadow-2xl drop-shadow-2xl`}
+                    style={{
+                      backgroundImage: `url(${currentImage})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center"
+                    }}
+                  /> : <></> }
+              {currentLyrics?.lyrics.map(lyricBatch => (
+                <div className="text-wrap text-center flex-shrink whitespace-break-spaces leading-snug font-semibold text-[min(10vh,2rem)]">
+                {lyricBatch.map(lyric => 
+                  <span onClick={() => seekToPosition(lyric.timestamp)} className={`${(currentTime + .25) > lyric.timestamp ? "opacity-100" : "opacity-50"} hover:opacity-80 transition-opacity duration-150 ease-out`}>{lyric.line}</span>  
+                )}
+                <br />
+                </div>
+                
+              ))}
 
-          <div
-            className={`transition-all duration-300 overflow-clip ease-out flex flex-col ${showQueueScreen ? "grow" : "w-0 grow-0"}`}
-          >
-            <div className={`transition-all delay-500 duration-300 max-w-full overflow-clip`}>
-              <p className="line-clamp-1 text-clip">queue goes here</p>
+              <br />
             </div>
+            
           </div>
+          <span className={`p-2`}></span>
+          { showCurrentlyPlayingScreen ? 
+            <div className={`grow rounded-2xl min-w-0 bg-neutral-900  overflow-hidden flex basis-0 flex-col p-4`}>
+            <div className="flex flex-col overflow-y-scroll grow">
+              <h1 className="font-semibold">Queue</h1>
+              <div className="overflow-y-scroll mt-1 flex grow flex-col">
+                <hr />
+                {currentQueue ? currentQueue?.map((song, index) => 
+                <Suspense fallback={<></>}>
+                  <AudioBarQueueTile song={song} highlight={index==currentQueueIndex}  />
+                </Suspense>
+                  
+                ) : <div className="grow flex items-center justify-center">
+                  <h1>Add a song to start playing!</h1>
+                </div> }
+              </div>
+            </div>
+          </div> : <></>
+          }
+          
         </div>
       </div>
 
       {/* ^ this should be separated into its own component */}
+      <div className="">
+        <div
+          ref={progressBar}
+          className={`h-[max(2px,0.125rem)] audio-bar-progress-bar-accent ease-linear`}
+          style={{
+            transitionProperty: "width",
+            transitionDuration: progressBarTransitionDuration,
+            width: progressBarWidth
+          }}
+        ></div>
+      </div>
       <div
-        className={`audio-bar-container-background flex flex-col transition-all duration-[1000ms] ease-in-out ${songInformation === undefined ? "w-0 p-0" : "w-[calc(100vw-3rem)] p-3"} overflow-hidden mx-6 z-50 rounded-2xl`}
+        className={`audio-bar-container-background flex flex-col transition-all duration-[1000ms] ease-in-out ${songInformation === undefined ? "h-0 p-0" : "h-20 p-3"} overflow-hidden`}
       >
         <div
           className={`transition-all duration-500 delay-[1000ms] ${songInformation === undefined ? "opacity-0 invisible" : "opacity-100 inline visible"}  flex flex-row items-center`}
@@ -187,9 +265,9 @@ const AudioBar = () => {
               backgroundPosition: "center"
             }}
           ></div>
-          <div className="flex flex-col pl-4">
+          <div className="flex flex-shrink flex-col pl-4">
             <h1 className=" font-semibold tracking-tight line-clamp-1">{songInformation?.name}</h1>
-            <div className="flex flex-row gap-x-1">
+            <div className="flex flex-row flex-shrink gap-x-1">
               <h1 className="text-sm text-nowrap inline-block text-ellipsis items-center w-full line-clamp-1">
                 <span className="opacity-70">{songInformation?.artists.join(", ")}</span>
                 <span className="opacity-70">&nbsp;|&nbsp;</span>
@@ -206,38 +284,30 @@ const AudioBar = () => {
           <audio
             ref={audioElement}
             onSeeked={() => {
-              updateProgressBar(0, true)
+              //updateProgressBar(0, true)
             }}
+            onTimeUpdate={() => {}}
             onEnded={trackEnded}
-            onPlay={() => updatePlaying(true)}
-            onPause={() => updatePlaying(false)}
+            onPlay={() => {updatePlaying(true); updateProgressBar(audioElement.current?.currentTime ?? 0, true)}}
+            onPause={() => {updatePlaying(false); updateProgressBar(audioElement.current?.currentTime ?? 0, false)}}
             onCanPlay={() => {
               playTrack()
             }}
             autoPlay={false}
-            className="bg-green-500"
             src={songInformation?.filePath}
           ></audio>
           <div className="grow" />
-          <div className="flex flex-row">
+          <div className="flex flex-row flex-shrink-0">
+            
             <div
               onClick={() => {
+                
                 updateShowCurrentlyPlayingScreen(!showCurrentlyPlayingScreen)
-              }}
-              className={`bg-transparent rounded-full hover:bg-red-500 p-4 transition-opacity self-center`}
-            >
-              <LuMicVocal
-                className={`text-xl pointer-events-none text-white ${showCurrentlyPlayingScreen ? "opacity-100" : "opacity-50"}`}
-              />
-            </div>
-            <div
-              onClick={() => {
-                updateShowQueueScreen(!showQueueScreen)
               }}
               className={`bg-transparent rounded-full hover:bg-red-500 p-4 transition-opacity`}
             >
               <LuStretchHorizontal
-                className={`text-xl pointer-events-none text-white ${showQueueScreen ? "opacity-100" : "opacity-50"}`}
+                className={`text-xl pointer-events-none text-white ${showCurrentlyPlayingScreen ? "opacity-100" : "opacity-50"}`}
               />
             </div>
             <div
@@ -262,15 +332,6 @@ const AudioBar = () => {
                 <LuPlay className="text-2xl" fill="#fff" />
               )}
             </div>
-            <div
-              ref={progressBar}
-              className={`h-[max(2px,0.125rem)] audio-bar-progress-bar-accent ease-linear absolute bottom-0 left-0`}
-              style={{
-                transitionProperty: "width",
-                transitionDuration: progressBarTransitionDuration,
-                width: progressBarWidth
-              }}
-            ></div>
           </div>
         </div>
       </div>

@@ -20,6 +20,9 @@ export interface Album {
 }
 export interface AudioBarSong {
   song: Song,
-  albumName: string,
-  albumImage: string
+  albumImage: {
+    hasData: boolean,
+    dataUrl: string
+  }
+  albumName: string
 }

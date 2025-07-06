@@ -1,18 +1,21 @@
 import AlbumSongTile from "@renderer/components/AlbumSongTile"
 import NavigationBarSpacer from "@renderer/components/NavigationBarSpacer"
 import { useEffect, useState } from "react"
+import { LuDisc } from "react-icons/lu"
 import { useParams, useSearchParams } from "react-router"
 import { Album } from "src/main/bgutils/songInformation"
 export default function AlbumPage() {
   const [abc, setAbc] = useSearchParams()
   const [album, updateAlbum] = useState<Album>()
   useEffect(() => {
+    
     console.log(abc.get("id"))
     // using ! operator here because it should be in there
     window.electronAPI
       .libraryRetrieveAlbumById(abc.get("id")!)
       .then((val) => {
         updateAlbum(val)
+        console.log(val);
         console.log(val?.name)
       })
       .catch((error) => {
@@ -24,9 +27,6 @@ export default function AlbumPage() {
 
   return (
     <div className="overflow-auto">
-      <div className="fixed bottom-0 z-[8] pointer-events-none album-page-more-content-fade h-[min(4rem,10vh)] w-full">
-        {/* This is to add a gradient at the bottom of the viewport */}
-      </div>
       <div>
         <div className="min-h-screen flex flex-col bg-neutral-800 ">
           <div className="hidden lg:inline">
@@ -105,19 +105,22 @@ export default function AlbumPage() {
           </div>
 
           <div className="px-12 flex flex-col gap-y-2 mt-4">
-            {album?.discs.keys().toArray().length == 1 ? (
+            {album?.discs.size == 1 ? (
               album.discs
                 .values()
                 .toArray()[0]
-                .map((song, index, array) => <AlbumSongTile  albumQueue={array} song={song} trackNo={index + 1} />)
-            ) : (
-              <div></div>
-            )}
+                .map((song, index) => <AlbumSongTile key={index} song={song} trackNo={index + 1} />)
+            ) : <></>
+            } 
+            {(album?.discs.size ?? 0) >= 2 ? album?.discs.entries().toArray().sort((a, b) => a[0].localeCompare(b[0])).map((value) => 
+                <>
+                
+                <div className="flex items-center p-2 flex-row gap-x-2"><LuDisc /><span>{value[0]}</span> <hr className="grow" /> </div>
+                {value[1].map((song, index) => <AlbumSongTile key={index} song={song} trackNo={index+1} />)}
+                </>
+            ) : <></>}  
           </div>
-
-          <NavigationBarSpacer accentGradient={false} />
-          
-          <NavigationBarSpacer accentGradient={false} />
+          <br />
           
         </div>
       </div>

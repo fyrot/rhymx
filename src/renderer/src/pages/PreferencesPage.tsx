@@ -28,6 +28,7 @@ export default function PreferencesPage() {
           <>
             {preferenceLinks.map((link) => (
               <div
+              key={link.text}
                 className="w-full bg-neutral-800 p-4 flex rounded-2xl mb-2 items-center flex-row"
                 onClick={() => {
                   navigateToPreference(link.href)

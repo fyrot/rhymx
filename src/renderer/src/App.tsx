@@ -11,6 +11,8 @@ import LibraryPage from "./pages/LibraryPage"
 import AlbumPage from "./pages/AlbumPage"
 import AudioBar from "./components/AudioBar"
 import PreferencesPluginsPage from "./pages/PreferencesExt/PreferencesPluginsPage"
+import CurrentlyPlayingOverlay from "./components/CurrentlyPlayingOverlay"
+import Layout from "./pages/Layout"
 function App() {
   useEffect(() => {
     const accentColor = localStorage.getItem("--accent-color");
@@ -27,17 +29,18 @@ function App() {
         <NavigationBar />
         <div>
           <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/search" element={<SearchPage />} /> 
-            <Route path="/preferences" element={<PreferencesPage />} />
-            <Route path="/preferences/display" element={<PreferencesDisplayPage />} />
-            <Route path="/preferences/library" element={<PreferencesLibraryPage />} />
-            <Route path="/preferences/plugins" element={<PreferencesPluginsPage />} />
-            <Route path="/library" element={<LibraryPage />} />
-            <Route path="/album" element={<AlbumPage />} />
-          </Routes>
+            <Route path="/" element={<Layout />}>
+              <Route index element={<HomePage />} />
+              <Route path="/search" element={<SearchPage />} /> 
+              <Route path="/preferences" element={<PreferencesPage />} />
+              <Route path="/preferences/display" element={<PreferencesDisplayPage />} />
+              <Route path="/preferences/library" element={<PreferencesLibraryPage />} />
+              <Route path="/preferences/plugins" element={<PreferencesPluginsPage />} />
+              <Route path="/library" element={<LibraryPage />} />
+              <Route path="/album" element={<AlbumPage />} />
+            </Route>
+          </Routes>  
         </div>
-        <AudioBar />
         </MemoryRouter>
     </>
   )
