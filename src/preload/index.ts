@@ -25,7 +25,7 @@ if (process.contextIsolated) {
       libraryRetrieveAlbumById: (id: string) => {return ipcRenderer.invoke("libraryRetrieve:albumById", id);},
       libraryRetrieveAlbumImageById: (id: string) => {return ipcRenderer.invoke("libraryRetrieve:albumImageById", id)},
       libraryRetrieveAlbumNameById: (id:string) => {return ipcRenderer.invoke("libraryRetrieve:albumNameById", id)},
-      queueUpdateQueueAndIndex: (newQueue: AudioBarSong[], newIndex: number) => {ipcRenderer.send("queue:updateQueueAndIndex", newQueue, newIndex);},
+      queueUpdateQueueAndIndex: (newQueue: AudioBarSong[] | null, newIndex: number) => {ipcRenderer.send("queue:updateQueueAndIndex", newQueue, newIndex);},
       queueUpdateAddToQueue: (newSong: AudioBarSong[]) => {ipcRenderer.send("queue:updateAddToQueue", newSong)},
       queueRetrieveCurrent: () => {return ipcRenderer.invoke("queue:retrieveCurrent");},
       queueRetrieveCurrentLRC: (filePath:string) => {return ipcRenderer.invoke("queue:retrieveCurrentLRC", filePath)},

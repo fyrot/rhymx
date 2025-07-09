@@ -19,7 +19,7 @@ export default function LibraryPage() {
         <div className="grow flex flex-col w-full items-center">
           <div className="p-4 w-full">
             {/*<h1>this is where the entire library can be accessed</h1>*/}
-            <AlbumsCarousel id="example" albumList={allAlbumsCarouselContent} title={"All Albums"} />
+            <AlbumsCarousel id="example" albumList={allAlbumsCarouselContent.sort((a,b) => a.name.localeCompare(b.name))} title={"All Albums"} />
       
           </div>
           

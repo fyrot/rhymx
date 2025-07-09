@@ -39,9 +39,11 @@ function queueNotifySkipTracks(event, tracksSkipped:number) {
   queueNotifyAudioBar();
 }
 
-function queueUpdateQueueAndIndex(event, newQueue:AudioBarSong[], newIndex:number):void {
+function queueUpdateQueueAndIndex(event, newQueue:AudioBarSong[] | null, newIndex:number):void {
   console.log("received queue and index");
-  queueManager.updateQueue(newQueue);
+  if (newQueue) {
+    queueManager.updateQueue(newQueue);
+  }
   queueManager.updateIndex(newIndex)
   queueNotifyAudioBar();
   globalMainWindow.webContents.send("queue:notifyAudioBarQueue", queueManager.retrieveQueue());

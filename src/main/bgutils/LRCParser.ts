@@ -5,7 +5,6 @@ function parseTimeBrackets(data: string) {
   // takes in an input like [0x:xx.xx] and returns a timestamp in seconds 
   const mmss:number[] = data.trim().slice(1, -1).split(":").map(val => parseFloat(val.trim()));
   // assumes an array of length 2
-  console.log(data.trim().slice(1,-1));
   return (mmss[0] * 60) + mmss[1];
 }
 function parseMetadataBrackets(data:string) {
@@ -24,7 +23,6 @@ export function parseLRC(textFile: string) {
     lyrics: []
   };
   const lines = textFile.split(lineEndingRE);
-  //console.log("lines", lines.length)
   const metadataLines = lines.filter(line => metadataRE.test(line));
   for (const metadataLine of metadataLines) {
     const parsedMetadata = parseMetadataBrackets(metadataLine);
@@ -35,7 +33,6 @@ export function parseLRC(textFile: string) {
   
   lyrics.forEach((lyric) => {
     let section:LyricInfo[] = [];
-    console.log(lyric);
     let tempArr:RegExpExecArray|null;
     while (tempArr = timeGlobalRE.exec(lyric)) {
 
@@ -48,7 +45,6 @@ export function parseLRC(textFile: string) {
     }
     preprocessedLyrics.push(section);
   })
-  //console.log(preprocessedLyrics[0]);
   //process durations
   preprocessedLyrics.forEach((lyricBatch, lyricBatchIndex) => {
     for (let lyricIndex = 0; lyricIndex < lyricBatch.length-1; lyricIndex++) {

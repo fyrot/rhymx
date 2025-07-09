@@ -12,27 +12,47 @@ import { useLocation, useNavigate } from "react-router"
 import { AudioBarSong, Song } from "src/main/bgutils/songInformation"
 import { LRCData, LyricInfo } from "src/main/bgutils/LRCParserUtils"
 import NavigationBarSpacer from "./NavigationBarSpacer"
+import {FixedSizeList as ReactWindowList} from "react-window"
+import AutoSizer from "react-virtualized-auto-sizer"
 const AudioBarQueueTile = lazy(() => import("./AudioBarQueueTile"))
 
 const AudioBar = () => {
   const [songInformation, updateSongInformation] = useState<Song>()
+  
   const [currentQueueIndex, updateCurrentQueueIndex] = useState<number>(0);
   const [currentQueue, updateCurrentQueue] = useState<AudioBarSong[]>();
-  const [albumName, updateAlbumName] = useState<string>("")
-  const navigate = useNavigate()
-  const location = useLocation();
   const [currentImage, updateCurrentImage] = useState<string>("")
   const [currentLyrics, updateCurrentLyrics] = useState<LRCData>();
+  
+  const [albumName, updateAlbumName] = useState<string>("")
+
+  const navigate = useNavigate()
+  const location = useLocation();
+  
   const [playing, updatePlaying] = useState<boolean>(false)
   const [progressBarWidth, updateProgressBarWidth] = useState<string>("0%")
   const [progressBarTransitionDuration, updateProgressBarTransitionDuration] =
     useState<string>("10s")
   const [showCurrentlyPlayingScreen, updateShowCurrentlyPlayingScreen] = useState<boolean>(false)
+  
   const audioElement = useRef<HTMLAudioElement | null>(null)
+  const audioContext = useRef<AudioContext | null>(null);
+  const audioGain = useRef<GainNode | null>(null);
+  const audioDynamicCompression = useRef<DynamicsCompressorNode | null>(null);
+
   const progressBar = useRef<HTMLDivElement>(null)
   const [currentTime, updateCurrentTime] = useState(0);
-  const isScrolling = useRef(false)
+
+  const remSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+  
+  const lyricDisplayContainer = useRef<HTMLDivElement>(null);
+  const lastLyricDisplayScroll = useRef<number>(Date.now())
+  
+
+  const [volume,updateVolume] = useState(0.8);
+
   useEffect(() => {
+    
     if ("mediaSession" in navigator) {
       navigator.mediaSession.setActionHandler("nexttrack", (action) => {
         trackEnded()
@@ -55,14 +75,6 @@ const AudioBar = () => {
       const [newSong, queueIndex] = await window.electronAPI.queueRetrieveCurrent();
       if (!newSong) {return;}
       updateCurrentQueueIndex(queueIndex);
-      
-      if ("mediaSession" in navigator) {
-        let trackDetails: any = {}
-        trackDetails.title = newSong.song.name
-        trackDetails.artist = newSong.song.artists.join(", ")
-        navigator.mediaSession.metadata = new MediaMetadata(trackDetails)
-      }
-      
       updateAlbumName(newSong.albumName)
       console.log(newSong)
       updateSongInformation(newSong.song)
@@ -86,6 +98,7 @@ const AudioBar = () => {
       }
       updateCurrentQueue(newQueue);
     })
+    
   }, [])
   useEffect(() => {
     updateShowCurrentlyPlayingScreen(false);
@@ -100,7 +113,62 @@ const AudioBar = () => {
       } else {
         updateCurrentLyrics(undefined);
       }
+    if (songInformation) {
+      if ("mediaSession" in navigator) {
+        let trackDetails: any = {}
+        trackDetails.title = songInformation.name
+        trackDetails.artist = songInformation.artists.join(", ")
+        trackDetails.album = albumName;
+        trackDetails.artwork = [{src: currentImage}];
+        navigator.mediaSession.metadata = new MediaMetadata(trackDetails)
+      }
+    }
   }, [songInformation])
+  // initializing audio context
+  
+  useEffect(() => {
+    if (!audioContext.current) {
+      audioContext.current = new window.AudioContext();
+      audioGain.current = audioContext.current.createGain()
+      audioDynamicCompression.current = audioContext.current.createDynamicsCompressor();
+    
+      /* dynamic compression set up  */
+
+      audioDynamicCompression.current.attack.value = 0.02;
+      audioDynamicCompression.current.knee.value = 30;
+      audioDynamicCompression.current.release.value = 0.1;
+      audioDynamicCompression.current.threshold.value = -30;
+      audioDynamicCompression.current.ratio.value = 5;
+
+    }
+    if (audioElement.current && audioContext.current && audioGain.current && audioDynamicCompression.current) {
+      try {
+        const sourceNode = audioContext.current.createMediaElementSource(audioElement.current);
+        sourceNode.connect(audioDynamicCompression.current);
+        audioDynamicCompression.current.connect(audioGain.current);
+        audioGain.current.connect(audioContext.current.destination);
+      } catch (error) {
+        console.log("error with source node creation", error);
+      }
+    } 
+  }, [])
+
+  useEffect(() => {
+    const setupDebounce  = () => {
+      lastLyricDisplayScroll.current = Date.now()
+    }
+    if (lyricDisplayContainer.current) {
+      lyricDisplayContainer.current.addEventListener("scroll", setupDebounce);
+    }
+    return () => {lyricDisplayContainer.current?.removeEventListener("scroll", setupDebounce)}
+  }, [])
+
+  useEffect(() => {
+    console.log("volume", volume);
+    if (audioGain.current) {
+      audioGain.current.gain.value = volume;
+    }
+  }, [volume])
 
   useEffect(() => {
     const audioTag = audioElement.current;
@@ -182,6 +250,27 @@ const AudioBar = () => {
     if (!audioElement.current) {return;}
     updateProgressBar(newPosition, true);
     audioElement.current.currentTime = newPosition;
+  }
+  const lyricScrollDebounce = 3000;
+  const navigateToLyric = (event: React.TransitionEvent<HTMLSpanElement>) => {
+    const transitionElement = event.currentTarget;
+    const shouldFill = transitionElement.classList.contains("audio-bar-filled-lyric");
+    if (shouldFill && (Date.now() - lastLyricDisplayScroll.current) > lyricScrollDebounce) {
+      transitionElement.scrollIntoView({ block: "center", behavior: "smooth"});
+    }
+  }
+
+  const QueueRow = ({index, style}) => {
+    if (currentQueue !== undefined && currentQueue[index]) {
+      const song = currentQueue[index];
+      return (
+      <div style={style}>
+        <AudioBarQueueTile song={song} highlight={index == currentQueueIndex} index={index} />
+      </div>
+    ) 
+    } else {
+      return <></>
+    }
     
   }
   return (
@@ -192,7 +281,7 @@ const AudioBar = () => {
         <NavigationBarSpacer accentGradient={false} />
         <div className="grow overflow-hidden flex-shrink flex px-4 pb-3 pt-0 flex-row">
           <div className={`grow-[2] basis-0 overflow-hidden flex min-w-0 rounded-2xl`} style={{background: `url(${currentImage})`, backgroundSize: "100% 100%", backgroundPosition: "center", backgroundAttachment: "fixed", backgroundRepeat: "space"}}>
-            <div className={`grow  rounded-2xl p-2 flex flex-col audio-bar-currently-playing-image-blur items-center overflow-y-auto ${!songInformation?.hasLRC ? "justify-center" : ""}`}>
+            <div ref={lyricDisplayContainer} className={`grow  rounded-2xl p-2 flex flex-col audio-bar-currently-playing-image-blur items-center overflow-y-auto ${!songInformation?.hasLRC ? "justify-center" : ""}`}>
               <br />
               {!songInformation?.hasLRC ? <div
                     className={`w-[min(40vw,40vh,24rem)] h-[min(40vw,40vh,24rem)]  flex-shrink-0 rounded-xl shadow-2xl drop-shadow-2xl`}
@@ -205,7 +294,7 @@ const AudioBar = () => {
               {currentLyrics?.lyrics.map(lyricBatch => (
                 <div className="text-wrap text-center flex-shrink whitespace-break-spaces leading-snug font-semibold text-[min(10vh,2rem)]">
                 {lyricBatch.map(lyric => 
-                  <span onClick={() => seekToPosition(lyric.timestamp)} className={`${(currentTime + .25) > lyric.timestamp ? "opacity-100" : "opacity-50"} hover:opacity-80 transition-opacity duration-150 ease-out`}>{lyric.line}</span>  
+                  <span className="transition-all duration-150 ease-out opacity-100 hover:audio-bar-hover-lyric"><span onClick={() => seekToPosition(lyric.timestamp)} className={`${(currentTime + .15) > lyric.timestamp ? "audio-bar-filled-lyric" : "opacity-50"} transition-opacity duration-150 ease-out`} onTransitionEnd={navigateToLyric}>{lyric.line}</span></span>
                 )}
                 <br />
                 </div>
@@ -219,18 +308,21 @@ const AudioBar = () => {
           <span className={`p-2`}></span>
           { showCurrentlyPlayingScreen ? 
             <div className={`grow rounded-2xl min-w-0 bg-neutral-900  overflow-hidden flex basis-0 flex-col p-4`}>
-            <div className="flex flex-col overflow-y-scroll grow">
+            <div className="flex flex-col grow">
               <h1 className="font-semibold">Queue</h1>
-              <div className="overflow-y-scroll mt-1 flex grow flex-col">
+              <div className="mt-1 flex grow flex-col">
                 <hr />
-                {currentQueue ? currentQueue?.map((song, index) => 
-                <Suspense fallback={<></>}>
-                  <AudioBarQueueTile song={song} highlight={index==currentQueueIndex}  />
-                </Suspense>
-                  
-                ) : <div className="grow flex items-center justify-center">
-                  <h1>Add a song to start playing!</h1>
-                </div> }
+                <AutoSizer>
+                  {({height, width}) => (
+                    <ReactWindowList itemCount={currentQueue?.length ?? 0} height={height} width={width} itemSize={remSize*4.5}>
+                      {QueueRow}
+                    </ReactWindowList>
+
+                  )}
+
+                </AutoSizer>
+                
+                
               </div>
             </div>
           </div> : <></>
@@ -297,17 +389,17 @@ const AudioBar = () => {
             src={songInformation?.filePath}
           ></audio>
           <div className="grow" />
-          <div className="flex flex-row flex-shrink-0">
+          <div className="flex flex-row flex-shrink-0 gap-x-2">
             
             <div
               onClick={() => {
                 
                 updateShowCurrentlyPlayingScreen(!showCurrentlyPlayingScreen)
               }}
-              className={`bg-transparent rounded-full hover:bg-red-500 p-4 transition-opacity`}
+              className={`bg-transparent rounded-full hover:bg-black p-4 transition-opacity`}
             >
               <LuStretchHorizontal
-                className={`text-xl pointer-events-none text-white ${showCurrentlyPlayingScreen ? "opacity-100" : "opacity-50"}`}
+                className={`text-2xl pointer-events-none text-white ${showCurrentlyPlayingScreen ? "opacity-100" : "opacity-50"}`}
               />
             </div>
             <div

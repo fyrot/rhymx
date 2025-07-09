@@ -12,7 +12,8 @@ export default function PreferencesDisplayPage() {
   const accentColorsList: AccentColorDisplay[] = [
     { colorCode: "250, 250, 250", name: "Off White", displayColor: "#FAFAFA" },
     { colorCode: "255, 86, 71", name: "Rudymentary Classic", displayColor: "#FF5647"},
-    { colorCode: "135, 23, 237", name: "Grimace Shake", displayColor: "#8721ed"},
+    { colorCode: "135, 23, 237", name: "Royal Purple", displayColor: "#8721ed"},
+    { colorCode: "125, 253, 254", name: "Ares Blue", displayColor: "#7dfdfe"}
     
   ]
   /**

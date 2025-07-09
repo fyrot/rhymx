@@ -14,7 +14,7 @@ export interface IElectronAPI {
     libraryRetrieveAlbumById: (id: string) => Promise<Album | undefined>,
     libraryRetrieveAlbumImageById: (id: string) => Promise<string>,
     libraryRetrieveAlbumNameById: (id:string) => Promise<string>,
-    queueUpdateQueueAndIndex: (newQueue: AudioBarSong[], newIndex: number) => void,
+    queueUpdateQueueAndIndex: (newQueue: AudioBarSong[] | null, newIndex: number) => void,
     queueUpdateAddToQueue: (newSong: AudioBarSong) => void,
     queueRetrieveCurrent: () => Promise<[AudioBarSong, number]>,
     queueRetrieveCurrentLRC: (filePath:string) => Promise<LRCData>,

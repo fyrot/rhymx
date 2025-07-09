@@ -132,12 +132,9 @@ export class LibraryManager {
           }
           const parsedPath = parse(filePath);
           const lrcPath = join(parsedPath.dir, parsedPath.name) + ".lrc";
-          //console.log(lrcPath)
+         
           const lrcAttachmentExists = fs.existsSync(lrcPath);
-          //if (fs.existsSync(lrcPath)) {
-          //  console.log("lrc file exists");
-          //  parseLRC(fs.readFileSync(lrcPath, {encoding: "utf8", flag: "r"}));
-          //}
+          
           let processedArtists:string[] = sanitizedMultiSplit(usedDelimiters, defaultDelimiter, (metadata.common.artists ?? ["Unknown"]).join(", "))
           const song = <Song>{
             name: metadata.common.title ?? basename(filePath, extname(filePath)),
@@ -149,7 +146,6 @@ export class LibraryManager {
             duration: metadata.format.duration ?? 0,
             hasLRC: lrcAttachmentExists
           }
-          console.log(song.filePath);
           currentAlbum.discs.get(discNumberString)?.push(song);
           // trying porting the later stuff and see what happens
           resolve();

@@ -52,7 +52,7 @@ const LibrarySources = () => {
             {" "}
             {/* This is where each source would go */}
             {testSources.map((source, index) => (
-              <div className="rounded-2xl p-4 items-center bg-neutral-900 flex flex-row w-full library-pref-folder-fade-in-left">
+              <div key={index} className="rounded-2xl p-4 items-center bg-neutral-900 flex flex-row w-full library-pref-folder-fade-in-left">
                 <h1 className="text-sm overflow-hidden text-ellipsis whitespace-nowrap">{source}</h1>
                 <div className="grow" />
                 <div
