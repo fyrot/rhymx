@@ -18,6 +18,11 @@ export interface Album {
   },
   albumId: string
 }
+export interface Artist {
+  artistId: string,
+  name: string,
+  discography: string[] // album ids
+}
 export interface AudioBarSong {
   song: Song,
   albumImage: {

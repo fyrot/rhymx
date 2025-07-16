@@ -1,12 +1,10 @@
 import * as fs from "fs"
 import { app } from "electron"
 import { join, extname, basename, format, parse } from "path"
-import { Song, Album, AudioBarSong } from "./songInformation"
+import { Song, Album, AudioBarSong, Artist } from "./songInformation"
 import * as jsmediatags from "jsmediatags"
 import { TagType } from "jsmediatags/types"
 import { parseFile } from "music-metadata"
-import { parseLRC } from "./LRCParser"
-import { LyricInfo, LRCData } from "./LRCParserUtils"
 export class LibraryManager {
   folderPaths: string[]
   audioFileFormats: Set<string> = new Set<string>([".mp3", ".flac"])
@@ -14,6 +12,7 @@ export class LibraryManager {
   appDataPaths: Map<string, string> = new Map([
     ["libraryPrefFolders", join(app.getPath("userData"), "libraryPrefFolders.json")]
   ])
+  artistLibrary: Map<string, Artist> = new Map<string, Artist>()
   constructor() {
     this.folderPaths = []
   }
@@ -85,10 +84,10 @@ export class LibraryManager {
     // it processed about 100+ .flacs and a few mp3s in half a second sheeeesh
     function sanitizedMultiSplit(delimiters:string[], defaultDelimiter:string, splitString:string):string[] {
       for (const delimiter of delimiters) {
-        splitString = splitString.replace(delimiter, defaultDelimiter);
+        splitString = splitString.replaceAll(delimiter, defaultDelimiter);
       }
-      let unsanitizedSplit = splitString.split(defaultDelimiter);
-      return unsanitizedSplit.filter((value) => value.trim().length > 0);
+      let unsanitizedSplit = splitString.split(defaultDelimiter).map((val) => val.trim());
+      return unsanitizedSplit.filter((value) => value.length > 0);
     }
     const usedDelimiters = [",", ";", "\0", "\\", "/"];
     const defaultDelimiter = ",";
@@ -99,8 +98,6 @@ export class LibraryManager {
       await Promise.all(songPathsUnique.slice((i*promiseBatchSize), Math.min(songPathsUnique.length, ((i+1)*promiseBatchSize))).map((filePath) => new Promise<void>(function (resolve, reject) {
         parseFile(filePath, {duration: true}).then((metadata) => {
           const albumName = metadata.common.album ?? "Download";
-          const songDuration = metadata.format.duration;
-
           if (!albumNameToIndex.has(albumName)) {
             const newIndex = albumList.length;
             const newAlbum = <Album>{
@@ -152,205 +149,18 @@ export class LibraryManager {
         }).catch((error) => {console.log(error);reject();});
       }
       )))
-      
-      /*await Promise.all(songPathsUnique.slice((i*promiseBatchSize), Math.min(songPathsUnique.length, (i+1)*promiseBatchSize)).map(songPath => new Promise<TagType>(function (resolve, reject) {
-      jsmediatags.read(songPath, {
-        onSuccess(data) {
-          let albumName = data.tags.album ?? "Download";
-          const discNumber = "1";
-          // jsmediatags does not support automatically reading disc number yet
-          if (!albumNameToIndex.has(albumName)) {
-            let newIndex = albumList.length;
-            let newAlbum = <Album>{
-              name: albumName,
-              artists: [],
-              discs: new Map<string, Song[]>(),
-              albumImage: {
-                hasData: false,
-                dataUrl: ""
-              },
-              albumId: ""
-            };
-            albumList.push(newAlbum);
-            console.log("pushed " + albumName);
-            albumNameToIndex.set(albumName, newIndex);
-          }
-          let albumItem = albumList[albumNameToIndex.get(albumName)!];
-          if ((!albumItem.albumImage.hasData) && (data.tags.picture?.data !== undefined && data.tags.picture.data.length > 0)) {
-            console.log("Album art found!!");
-            //console.log(data.tags.picture.data);
-            const imageFormat = data.tags.picture.format;
-            const base64string = Buffer.from(new Uint8Array(data.tags.picture.data)).toString("base64");
-            albumItem.albumImage.dataUrl = `data:${imageFormat};base64,${base64string}`;
-            albumItem.albumImage.hasData = true;
-          }
-          // ignoring possibility of null here w/ the ! operator, be wary
-          if (!albumItem.discs.has(discNumber)) {
-            albumItem.discs.set(discNumber, []);
-          }
-          const artistsList = sanitizedMultiSplit(usedDelimiters, defaultDelimiter, data.tags.artist ?? "Unknown");
-          const song = <Song>{
-            name: data.tags.title ?? basename(songPath, extname(songPath)),
-            trackNo: data.tags.track ?? 1,
-            artists: artistsList,
-            albumRefId: data.tags.album ?? "Download",
-            filePath: songPath,
-            songId: ""            
-          }
-          // this works because an array is an object, so we get a reference
-          // why am i saying "we"
-          albumItem.discs.get(discNumber)?.push(song);
-          resolve(data);
-        }, onError(error) {
-          reject(error)
-        }
-      })
     }
-    )));*/
-    
-    }
-    // ignore later commented out code, for reference
-    
-    /*for (const songPath of songPathsUnique) {
-      const cheapTags = await new Promise<TagType>(function (resolve, reject) {
-        new jsmediatags.Reader(songPath)
-        .setTagsToRead(["title", "artist", "album", "track"])
-        .read({
-          onSuccess(data) {
-            let albumName = data.tags.album ?? "Download"
-            const discNumber = "1"
-            // jsmediatags does not support automatically reading disc number yet
-            if (!albumNameToIndex.has(albumName)) {
-              let newIndex = albumList.length
-              let newAlbum = <Album>{
-                name: albumName,
-                artists: [],
-                discs: new Map<string, Song[]>(),
-                albumImage: {
-                  hasData: false,
-                  dataUrl: ""
-                },
-                albumId: ""
-              }
-              albumList.push(newAlbum)
-              console.log("pushed " + albumName)
-              albumNameToIndex.set(albumName, newIndex)
-            }
-            let albumItem = albumList[albumNameToIndex.get(albumName)!]
-            if (!albumItem.discs.has(discNumber)) {
-              albumItem.discs.set(discNumber, [])
-            }
-            const song = <Song>{
-              name: data.tags.title ?? basename(songPath, extname(songPath)),
-              trackNo: data.tags.track ?? 1,
-              artists: [data.tags.artist],
-              albumRefId: data.tags.album ?? "Download",
-              filePath: songPath,
-              songId: ""
-            }
-            // this works because an array is an object, so we get a reference
-            // why am i saying "we"
-            albumItem.discs.get(discNumber)?.push(song)
-            resolve(data);
-          },
-          onError(error) {
-            console.log("Error found: ", error.type, error.info);
-            reject(error);
-          }
-        });
-      })
-      const albumItem = albumList[albumNameToIndex.get(cheapTags.tags.album ?? "Download")!];
-      if (albumItem.albumImage.hasData == false) {
-        console.log("searching for image..");
-        await new Promise<void>(function (resolve, reject) {
-          new jsmediatags.Reader(songPath)
-          .setTagsToRead(["picture"])
-          .read({
-            onSuccess(data) {
-              if (data.tags.picture?.data !== undefined && data.tags.picture.data.length > 0) {
-                console.log("Album art found!!")
-                //console.log(data.tags.picture.data);
-                const imageFormat = data.tags.picture.format
-                const base64string = Buffer.from(new Uint8Array(data.tags.picture.data)).toString("base64")
-                albumItem.albumImage.dataUrl = `data:${imageFormat};base64,${base64string}`
-                albumItem.albumImage.hasData = true;
-              }
-              resolve();
-            },
-            onError(error) {
-              console.log("Error found:", error.type, error.info);
-              reject();
-            }
-          })
-        });
-      }
-      
-    }*/
-    /*for (const songPath of songPathsUnique) {
-     const data = await this.jsmediatagsPromise(songPath)
-
-      //console.log(data.tags)
-      let albumName = data.tags.album ?? "Download"
-      const discNumber = "1"
-      // jsmediatags does not support automatically reading disc number yet
-      if (!albumNameToIndex.has(albumName)) {
-        let newIndex = albumList.length
-        let newAlbum = <Album>{
-          name: albumName,
-          artists: [],
-          discs: new Map<string, Song[]>(),
-          albumImage: {
-            hasData: false,
-            dataUrl: ""
-          },
-          albumId: ""
-        }
-        albumList.push(newAlbum)
-        console.log("pushed " + albumName)
-        albumNameToIndex.set(albumName, newIndex)
-      }
-      let albumItem = albumList[albumNameToIndex.get(albumName)!]
-      if (
-        albumItem.albumImage.dataUrl.length == 0 &&
-        data.tags.picture?.data !== undefined &&
-        data.tags.picture.data.length > 0
-      ) {
-        console.log("Album art found!!")
-        //console.log(data.tags.picture.data);
-        const imageFormat = data.tags.picture.format
-        const base64string = Buffer.from(new Uint8Array(data.tags.picture.data)).toString("base64")
-        albumItem.albumImage.dataUrl = `data:${imageFormat};base64,${base64string}`
-      }
-      // ignoring possibility of null here w/ the ! operator, be wary
-      if (!albumItem.discs.has(discNumber)) {
-        albumItem.discs.set(discNumber, [])
-      }
-
-      const song = <Song>{
-        name: data.tags.title ?? basename(songPath, extname(songPath)),
-        trackNo: data.tags.track ?? 1,
-        artists: [data.tags.artist],
-        albumRefId: data.tags.album ?? "Download",
-        filePath: songPath,
-        songId: ""
-      }
-      // this works because an array is an object, so we get a reference
-      // why am i saying "we"
-      albumItem.discs.get(discNumber)?.push(song)
-    }*/
     const perfTimestampEnd = Date.now();
     console.log("Indexing time: " + (perfTimestampEnd-perfTimestampStart).toString()+"ms");
     
     //console.log(albumList);
     let albumIdSet: Set<string> = new Set<string>()
+    let temporaryArtistLibrary = new Map<string, Set<string>>()
+    let temporaryArtistName = new Map<string, string>();
     // generating unique identifier codes
     // practically very unlikely for a collision, so this is just for peace of mind lol
     for (let i = 0; i < albumList.length; i++) {
-      let newId = this.folderIndexGenerateRandomId()
-      while (albumIdSet.has(newId)) {
-        newId = this.folderIndexGenerateRandomId()
-        console.log(newId)
-      }
+      let newId = albumList[i].name.replaceAll("_", "__").replaceAll(" ", "_");
       albumIdSet.add(newId)
       albumList[i].albumId = newId
 
@@ -380,17 +190,34 @@ export class LibraryManager {
             // write this better later
             disc.forEach((song:Song) => {
               song.albumRefId = album.albumId;
-              song.artists.forEach((artist:string) => {artistSet.add(artist);})
+              song.artists.forEach((artist:string) => {
+                artistSet.add(artist);
+                const artistUnderscore = artist.replaceAll(" ", "_");
+                if (!temporaryArtistName.has(artistUnderscore)) {
+                  temporaryArtistName.set(artistUnderscore, artist);
+                }
+                if (!temporaryArtistLibrary.has(artistUnderscore)) {
+                  temporaryArtistLibrary.set(artistUnderscore, new Set<string>())
+                }
+                temporaryArtistLibrary.get(artistUnderscore)?.add(album.albumId);
+              })
           })
           
           }
-          console.log(album.discs.get("1")?.length);
           album.artists = artistSet.values().toArray();
         }
       }
 
       this.albumLibrary.set(newId, albumList[i])
     }
+    temporaryArtistLibrary.forEach((set, key) => {
+      this.artistLibrary.set(key, <Artist>{
+        artistId: key,
+        name: temporaryArtistName.get(key),
+        discography: set.values().toArray()
+      })
+    })
+    console.log(temporaryArtistLibrary);
   }
   libraryRetrieveAllAlbums(): Album[] {
     return this.albumLibrary.values().toArray()
@@ -403,5 +230,8 @@ export class LibraryManager {
   }
   libraryRetrieveAlbumNameById(id:string):string | undefined {
     return this.albumLibrary.get(id)?.name;
+  }
+  libraryRetrieveArtistById(id:string):Artist | undefined {
+    return this.artistLibrary.get(id)
   }
 }

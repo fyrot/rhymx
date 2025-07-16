@@ -4,7 +4,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import * as fs from 'fs';
 import { LibraryManager } from './bgutils/LibraryManager';
-import { Album, AudioBarSong, Song } from './bgutils/songInformation';
+import { Album, Artist, AudioBarSong, Song } from './bgutils/songInformation';
 import { QueueManager } from './bgutils/QueueManager';
 import EventEmitter from 'events';
 import { LRCData } from './bgutils/LRCParserUtils';
@@ -128,6 +128,9 @@ async function libraryRetrieveAlbumNameById(event, id):Promise<string> {
   console.log("retrieving name w/ id", id);
   return libraryManager.libraryRetrieveAlbumNameById(id) ?? "blah";
 }
+async function libraryRetrieveArtistById(event, id):Promise<Artist | undefined> {
+  return libraryManager.libraryRetrieveArtistById(id);
+}
 
 function pluginsAddSources(event):void {
   dialog.showOpenDialog({
@@ -241,6 +244,7 @@ app.whenReady().then(() => {
   ipcMain.handle("libraryRetrieve:albumById", libraryRetrieveAlbumById);
   ipcMain.handle("libraryRetrieve:albumImageById", libraryRetrieveAlbumImageById);
   ipcMain.handle("libraryRetrieve:albumNameById", libraryRetrieveAlbumNameById);
+  ipcMain.handle("libraryRetrieve:artistById", libraryRetrieveArtistById);
   ipcMain.on("queue:updateQueueAndIndex", queueUpdateQueueAndIndex);
   ipcMain.on("queue:updateAddToQueue", queueUpdateAddToQueue);
   ipcMain.handle("queue:retrieveCurrent", queueRetrieveCurrent);

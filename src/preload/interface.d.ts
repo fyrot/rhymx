@@ -1,5 +1,5 @@
 import { LRCData } from "../main/bgutils/LRCParserUtils";
-import { Album, Song, AudioBarSong } from "../main/bgutils/songInformation";
+import { Album, Song, AudioBarSong, Artist } from "../main/bgutils/songInformation";
 export interface IElectronAPI {
     closeWindow: (shouldClose: boolean) => void,
     toggleMaximizeWindow: () => void,
@@ -14,6 +14,7 @@ export interface IElectronAPI {
     libraryRetrieveAlbumById: (id: string) => Promise<Album | undefined>,
     libraryRetrieveAlbumImageById: (id: string) => Promise<string>,
     libraryRetrieveAlbumNameById: (id:string) => Promise<string>,
+    libraryRetrieveArtistById: (id:string) => Promise<Artist | undefined>
     queueUpdateQueueAndIndex: (newQueue: AudioBarSong[] | null, newIndex: number) => void,
     queueUpdateAddToQueue: (newSong: AudioBarSong) => void,
     queueRetrieveCurrent: () => Promise<[AudioBarSong, number]>,

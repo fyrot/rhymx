@@ -1,15 +1,13 @@
 import AlbumSongTile from "@renderer/components/AlbumSongTile"
 import NavigationBarSpacer from "@renderer/components/NavigationBarSpacer"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useLayoutEffect } from "react"
 import { LuDisc } from "react-icons/lu"
 import { useParams, useSearchParams } from "react-router"
 import { Album } from "src/main/bgutils/songInformation"
 export default function AlbumPage() {
   const [abc, setAbc] = useSearchParams()
   const [album, updateAlbum] = useState<Album>()
-  useEffect(() => {
-    
-    console.log(abc.get("id"))
+  useLayoutEffect(() => {
     // using ! operator here because it should be in there
     window.electronAPI
       .libraryRetrieveAlbumById(abc.get("id")!)
@@ -26,7 +24,7 @@ export default function AlbumPage() {
   
 
   return (
-    <div className="overflow-auto">
+    <div>
       <div>
         <div className="min-h-screen flex flex-col bg-neutral-800 ">
           <div className="hidden lg:inline">

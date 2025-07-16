@@ -25,11 +25,11 @@ if (process.contextIsolated) {
       libraryRetrieveAlbumById: (id: string) => {return ipcRenderer.invoke("libraryRetrieve:albumById", id);},
       libraryRetrieveAlbumImageById: (id: string) => {return ipcRenderer.invoke("libraryRetrieve:albumImageById", id)},
       libraryRetrieveAlbumNameById: (id:string) => {return ipcRenderer.invoke("libraryRetrieve:albumNameById", id)},
+      libraryRetrieveArtistById: (id:string) => {return ipcRenderer.invoke("libraryRetrieve:artistById", id)},
       queueUpdateQueueAndIndex: (newQueue: AudioBarSong[] | null, newIndex: number) => {ipcRenderer.send("queue:updateQueueAndIndex", newQueue, newIndex);},
       queueUpdateAddToQueue: (newSong: AudioBarSong[]) => {ipcRenderer.send("queue:updateAddToQueue", newSong)},
       queueRetrieveCurrent: () => {return ipcRenderer.invoke("queue:retrieveCurrent");},
       queueRetrieveCurrentLRC: (filePath:string) => {return ipcRenderer.invoke("queue:retrieveCurrentLRC", filePath)},
-      
       queueNotifyAudioBar: (callback) => {ipcRenderer.on("queue:notifyAudioBar", (_event) => {callback()});},
       currentlyPlayingUpdateVisibility: (visibility: boolean) => {ipcRenderer.send("currentlyPlaying:updateVisibility", visibility)},
       currentlyPlayingReceiveVisibility: (callback) => {ipcRenderer.on("currentlyPlaying:receiveVisibility", (_event, visibility) => {callback(visibility)})},

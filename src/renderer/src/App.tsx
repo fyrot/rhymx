@@ -9,10 +9,9 @@ import PreferencesLibraryPage from "./pages/PreferencesExt/PreferencesLibraryPag
 import { useEffect } from "react"
 import LibraryPage from "./pages/LibraryPage"
 import AlbumPage from "./pages/AlbumPage"
-import AudioBar from "./components/AudioBar"
 import PreferencesPluginsPage from "./pages/PreferencesExt/PreferencesPluginsPage"
-import CurrentlyPlayingOverlay from "./components/CurrentlyPlayingOverlay"
 import Layout from "./pages/Layout"
+import ArtistPage from "./pages/ArtistPage"
 function App() {
   useEffect(() => {
     const accentColor = localStorage.getItem("--accent-color");
@@ -38,6 +37,7 @@ function App() {
               <Route path="/preferences/plugins" element={<PreferencesPluginsPage />} />
               <Route path="/library" element={<LibraryPage />} />
               <Route path="/album" element={<AlbumPage />} />
+              <Route path="/artist" element={<ArtistPage />} />
             </Route>
           </Routes>  
         </div>

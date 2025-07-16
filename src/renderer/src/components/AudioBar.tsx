@@ -1,7 +1,5 @@
-import { useEffect, useMemo, useRef, useState, Suspense, lazy } from "react"
+import { useEffect, useRef, useState, lazy } from "react"
 import {
-  LuMicVocal,
-  LuMusic3,
   LuPause,
   LuPlay,
   LuSkipBack,
@@ -10,7 +8,7 @@ import {
 } from "react-icons/lu"
 import { useLocation, useNavigate } from "react-router"
 import { AudioBarSong, Song } from "src/main/bgutils/songInformation"
-import { LRCData, LyricInfo } from "src/main/bgutils/LRCParserUtils"
+import { LRCData } from "src/main/bgutils/LRCParserUtils"
 import NavigationBarSpacer from "./NavigationBarSpacer"
 import {FixedSizeList as ReactWindowList} from "react-window"
 import AutoSizer from "react-virtualized-auto-sizer"
@@ -154,13 +152,16 @@ const AudioBar = () => {
   }, [])
 
   useEffect(() => {
-    const setupDebounce  = () => {
-      lastLyricDisplayScroll.current = Date.now()
+    const setupDebounce  = (event:Event) => {
+      console.log(event.isTrusted);
+      if (event.isTrusted) {
+        lastLyricDisplayScroll.current = Date.now()
+      }
     }
     if (lyricDisplayContainer.current) {
-      lyricDisplayContainer.current.addEventListener("scroll", setupDebounce);
+      lyricDisplayContainer.current.addEventListener("wheel", setupDebounce);
     }
-    return () => {lyricDisplayContainer.current?.removeEventListener("scroll", setupDebounce)}
+    return () => {lyricDisplayContainer.current?.removeEventListener("wheel", setupDebounce)}
   }, [])
 
   useEffect(() => {
@@ -193,6 +194,12 @@ const AudioBar = () => {
       if (songInformation) {
         navigate(`/album?id=${songInformation.albumRefId}`)
       }
+    }, 0)
+  }
+  const navigateToArtist = (artist:string) => {
+    console.log("navigating to artist");
+    setTimeout(() => {
+      navigate(`/artist?id=${artist.replaceAll(" ", "_")}`)
     }, 0)
   }
   const playTrack = () => {
@@ -361,7 +368,14 @@ const AudioBar = () => {
             <h1 className=" font-semibold tracking-tight line-clamp-1">{songInformation?.name}</h1>
             <div className="flex flex-row flex-shrink gap-x-1">
               <h1 className="text-sm text-nowrap inline-block text-ellipsis items-center w-full line-clamp-1">
-                <span className="opacity-70">{songInformation?.artists.join(", ")}</span>
+                {songInformation?.artists.map((val,ind) => (
+                  <>
+                  <span onClick={() => {navigateToArtist(val)}} className="transition-all duration-300 opacity-70 hover:opacity-100 delay-100 ease accent-color-text-hover-thin-underline">
+                  {val}
+                  </span>
+                  {ind < songInformation.artists.length - 1 ? <span className="opacity-70">, </span> : <></>}
+                  </>
+                ))}
                 <span className="opacity-70">&nbsp;|&nbsp;</span>
                 <span
                   className="transition-all duration-300 opacity-70 hover:opacity-100 delay-100 ease accent-color-text-hover-thin-underline"

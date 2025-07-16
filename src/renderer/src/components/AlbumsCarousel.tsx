@@ -34,7 +34,7 @@ const AlbumsCarousel = ( {albumList, title, id}: {albumList: Album[], title: str
         <div className="grow" />
         
       </div>  
-      <div ref={carouselComponent} className={`py-1 bg-[rgba(0,0,0,0.5)] rounded-xl snap-x scroll-smooth snap-proximity ${opened ? "flex-wrap flex-row" : "overflow-x-auto"} flex flex-row accent-color-scrollbar-less-intrusive`}>
+      <div ref={carouselComponent} className={`p-2 bg-[rgba(0,0,0,0.5)] rounded-xl snap-x scroll-smooth snap-proximity ${opened ? "flex-wrap flex-row" : "overflow-x-auto"} flex flex-row accent-color-scrollbar-less-intrusive`}>
         <>
         {albumList.map((albumI) => (
           <div key={albumI.albumId} className="snap-start">

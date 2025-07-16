@@ -237,7 +237,19 @@ html {
 }
 .audio-bar-container {
 }
+@keyframes fill-animation {
+    from {
+        scale: 0;
+    }
+    to {
+        scale: 1;
+    }
+}
+.album-tile-fill-animation {
+    scale: 0;
+    animation: fill-animation 0.5s forwards;
 
+}
 
 /*html {
   scrollbar-width: none;  
