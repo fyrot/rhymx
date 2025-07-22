@@ -208,16 +208,22 @@ const AudioBar = () => {
     //updateProgressBar(0, true)
   }
   const toggleTrackPlaying = () => {
-    if (audioElement.current) {
-      if (audioElement.current.paused) {
-        audioElement.current.play()
-        //updateProgressBar(audioElement.current.currentTime, true)
-      } else {
-        audioElement.current.pause()
-        //updateProgressBar(audioElement.current.currentTime, false)
-      }
+      console.log(songInformation?.filePath);
+
+      if (audioElement.current) {
+        if (audioElement.current.paused) {
+          audioElement.current.load()
+          audioElement.current.play()
+          
+          //updateProgressBar(audioElement.current.currentTime, true)
+        } else {
+          audioElement.current.pause()
+          //updateProgressBar(audioElement.current.currentTime, false)
+        }
       console.log("position", audioElement.current?.currentTime)
     }
+
+    
   }
   const trackEnded = () => {
     window.electronAPI.queueNotifyTrackEnded()

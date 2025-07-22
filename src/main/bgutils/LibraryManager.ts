@@ -67,11 +67,17 @@ export class LibraryManager {
     console.log("folder index reached")
     let songPathSet: Set<string> = new Set<string>()
     // note: forEach allows for 3 parameters: value, index, and array
+    
     this.folderPaths.forEach((folder) => {
+      console.log(folder);
+      console.log(fs.readdirSync(folder, {recursive: true, withFileTypes: true}));
+      
       fs.readdirSync(folder, { recursive: true, withFileTypes: true })
-        .filter((file) => file.isFile() && this.audioFileFormats.has(extname(file.name)))
-        .map((file) => join(file.parentPath, file.name))
-        .forEach((value) => {
+
+      .filter((file) => file.isFile() && this.audioFileFormats.has(extname(file.name)))
+      .map((file) => join(file.parentPath, file.name))
+      .forEach((value) => { 
+        console.log(value);
           songPathSet.add(value)
         })
     })
