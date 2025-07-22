@@ -247,6 +247,7 @@ html {
 }
 .album-tile-fill-animation {
     scale: 0;
+    transform-origin: left;
     animation: fill-animation 0.5s forwards;
 
 }

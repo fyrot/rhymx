@@ -65,7 +65,7 @@ const LibrarySources = () => {
             ))}
           </>
         </div>
-        <div className="inline-block flex flex-row">
+        <div className="inline-block flex flex-row gap-x-2">
           <div onClick={addNewFolder} className="border-white bg-transparent hover:bg-neutral-900 border-2 px-4 py-2 transition-all duration-300 ease-out items-center rounded-full flex-row inline-flex opacity-50 hover:opacity-100">
             <LuListPlus className="text-2xl" />
             <h1 className="pl-2 text-sm">Add Source</h1>
