@@ -211,8 +211,9 @@ const AudioBar = () => {
       console.log(songInformation?.filePath);
 
       if (audioElement.current) {
+        console.log(audioElement.current.src);
         if (audioElement.current.paused) {
-          audioElement.current.load()
+          
           audioElement.current.play()
           
           //updateProgressBar(audioElement.current.currentTime, true)
@@ -406,7 +407,7 @@ const AudioBar = () => {
               playTrack()
             }}
             autoPlay={false}
-            src={songInformation?.filePath}
+            src={`file://${songInformation?.filePath}`}
           ></audio>
           <div className="grow" />
           <div className="flex flex-row flex-shrink-0 gap-x-2">
