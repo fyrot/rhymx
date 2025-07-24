@@ -6,6 +6,7 @@ export interface IElectronAPI {
     windowMaximized: (callback:any) => void,
     windowUnmaximized: (callback: any) => void,
     minimizeWindow: () => void,
+    retrieveOS: () => Promise<string>,
     libraryPrefAddNewSource: () => Promise<string[]>,
     libraryPrefRetrieveSourceList: () => Promise<string[]>
     libraryPrefUpdateSourceList: (sources:string[]) => void,

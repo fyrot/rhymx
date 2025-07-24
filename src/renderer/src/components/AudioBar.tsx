@@ -10,29 +10,38 @@ import { useLocation, useNavigate } from "react-router"
 import { AudioBarSong, Song } from "src/main/bgutils/songInformation"
 import { LRCData } from "src/main/bgutils/LRCParserUtils"
 import NavigationBarSpacer from "./NavigationBarSpacer"
-import {FixedSizeList as ReactWindowList} from "react-window"
+import { FixedSizeList as ReactWindowList } from "react-window"
 import AutoSizer from "react-virtualized-auto-sizer"
 const AudioBarQueueTile = lazy(() => import("./AudioBarQueueTile"))
 
+function base64ToBlob(base64string:string) {
+  const byteData = atob(base64string.split(",")[1]);
+  const arrayBuffer= new Uint8Array(byteData.length);
+  for (let i = 0; i < byteData.length; i++) {
+    arrayBuffer[i] = byteData.charCodeAt(i);
+  }
+  return URL.createObjectURL(new Blob([arrayBuffer], {type: base64string.substring(0,base64string.indexOf(";")).substring("data:".length)}));
+}
+
 const AudioBar = () => {
   const [songInformation, updateSongInformation] = useState<Song>()
-  
+
   const [currentQueueIndex, updateCurrentQueueIndex] = useState<number>(0);
   const [currentQueue, updateCurrentQueue] = useState<AudioBarSong[]>();
   const [currentImage, updateCurrentImage] = useState<string>("")
   const [currentLyrics, updateCurrentLyrics] = useState<LRCData>();
-  
+
   const [albumName, updateAlbumName] = useState<string>("")
 
   const navigate = useNavigate()
   const location = useLocation();
-  
+
   const [playing, updatePlaying] = useState<boolean>(false)
   const [progressBarWidth, updateProgressBarWidth] = useState<string>("0%")
   const [progressBarTransitionDuration, updateProgressBarTransitionDuration] =
     useState<string>("10s")
   const [showCurrentlyPlayingScreen, updateShowCurrentlyPlayingScreen] = useState<boolean>(false)
-  
+
   const audioElement = useRef<HTMLAudioElement | null>(null)
   const audioContext = useRef<AudioContext | null>(null);
   const audioGain = useRef<GainNode | null>(null);
@@ -42,15 +51,16 @@ const AudioBar = () => {
   const [currentTime, updateCurrentTime] = useState(0);
 
   const remSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
-  
+
   const lyricDisplayContainer = useRef<HTMLDivElement>(null);
   const lastLyricDisplayScroll = useRef<number>(Date.now())
-  
 
-  const [volume,updateVolume] = useState(0.8);
+
+  const [volume, updateVolume] = useState(0.8);
 
   useEffect(() => {
     
+
     if ("mediaSession" in navigator) {
       navigator.mediaSession.setActionHandler("nexttrack", (action) => {
         trackEnded()
@@ -68,68 +78,68 @@ const AudioBar = () => {
         toggleTrackPlaying()
       })
     }
-    
+
     window.electronAPI.queueNotifyAudioBar(async () => {
       const [newSong, queueIndex] = await window.electronAPI.queueRetrieveCurrent();
-      if (!newSong) {return;}
+      if (!newSong) { return; }
       updateCurrentQueueIndex(queueIndex);
       updateAlbumName(newSong.albumName)
-      console.log(newSong)
       updateSongInformation(newSong.song)
       updateCurrentImage(newSong.albumImage.dataUrl)
-      console.log("got notification")
-      
+      //console.log(newSong)
+      //console.log("got notification")
+
       //updateProgressBar(0, true);
     });
-    window.electronAPI.queueNotifyAudioBarQueue(async (newQueue:AudioBarSong[]) => {
+    window.electronAPI.queueNotifyAudioBarQueue(async (newQueue: AudioBarSong[]) => {
       if (!songInformation) {
         updateSongInformation(newQueue[0].song)
         updateCurrentQueueIndex(0);
         updateCurrentImage(newQueue[0].albumImage.dataUrl)
         updateAlbumName(newQueue[0].albumName)
         if ("mediaSession" in navigator) {
-        let trackDetails: any = {}
-        trackDetails.title = newQueue[0].song.name
-        trackDetails.artist = newQueue[0].song.artists.join(", ")
-        navigator.mediaSession.metadata = new MediaMetadata(trackDetails)
-      }
+          let trackDetails: any = {}
+          trackDetails.title = newQueue[0].song.name
+          trackDetails.artist = newQueue[0].song.artists.join(", ")
+          navigator.mediaSession.metadata = new MediaMetadata(trackDetails)
+        }
       }
       updateCurrentQueue(newQueue);
     })
-    
+
   }, [])
   useEffect(() => {
     updateShowCurrentlyPlayingScreen(false);
   }, [location])
   useEffect(() => {
     if (songInformation && songInformation.hasLRC) {
-        window.electronAPI.queueRetrieveCurrentLRC(songInformation.filePath).then((newLRCData) => {
-          updateCurrentLyrics(newLRCData);  
-          console.log(newLRCData);
-        }).catch((error) => {console.log("wow")});
-        
-      } else {
-        updateCurrentLyrics(undefined);
-      }
+      window.electronAPI.queueRetrieveCurrentLRC(songInformation.filePath).then((newLRCData) => {
+        updateCurrentLyrics(newLRCData);
+        console.log(newLRCData);
+      }).catch((error) => { console.log("wow") });
+
+    } else {
+      updateCurrentLyrics(undefined);
+    }
     if (songInformation) {
       if ("mediaSession" in navigator) {
         let trackDetails: any = {}
         trackDetails.title = songInformation.name
         trackDetails.artist = songInformation.artists.join(", ")
         trackDetails.album = albumName;
-        trackDetails.artwork = [{src: currentImage}];
+        trackDetails.artwork = [{ src: base64ToBlob(currentImage) }];
         navigator.mediaSession.metadata = new MediaMetadata(trackDetails)
       }
     }
   }, [songInformation])
   // initializing audio context
-  
+
   useEffect(() => {
     if (!audioContext.current) {
       audioContext.current = new window.AudioContext();
       audioGain.current = audioContext.current.createGain()
       audioDynamicCompression.current = audioContext.current.createDynamicsCompressor();
-    
+
       /* dynamic compression set up  */
 
       audioDynamicCompression.current.attack.value = 0.02;
@@ -141,18 +151,30 @@ const AudioBar = () => {
     }
     if (audioElement.current && audioContext.current && audioGain.current && audioDynamicCompression.current) {
       try {
-        const sourceNode = audioContext.current.createMediaElementSource(audioElement.current);
+        /*const sourceNode = audioContext.current.createMediaElementSource(audioElement.current);
         sourceNode.connect(audioDynamicCompression.current);
         audioDynamicCompression.current.connect(audioGain.current);
-        audioGain.current.connect(audioContext.current.destination);
+        audioGain.current.connect(audioContext.current.destination);*/
       } catch (error) {
         console.log("error with source node creation", error);
       }
-    } 
+    }
+    
+    if (audioElement.current) {
+      const eventLogging = (event) => {console.log(`Event ran, ${event.type}`); console.log(event)};
+      const eventList = ['loadedmetadata', 'error', 'loadstart', 'abort', 'canplay'];
+      eventList.forEach((e) => {audioElement.current?.addEventListener(e, eventLogging)})
+      return () => {
+        eventList.forEach((e) => {audioElement.current?.removeEventListener(e, eventLogging)})
+      }
+    } else {
+      console.log("No audioElement.current");
+    }
+    
   }, [])
 
   useEffect(() => {
-    const setupDebounce  = (event:Event) => {
+    const setupDebounce = (event: Event) => {
       console.log(event.isTrusted);
       if (event.isTrusted) {
         lastLyricDisplayScroll.current = Date.now()
@@ -161,7 +183,7 @@ const AudioBar = () => {
     if (lyricDisplayContainer.current) {
       lyricDisplayContainer.current.addEventListener("wheel", setupDebounce);
     }
-    return () => {lyricDisplayContainer.current?.removeEventListener("wheel", setupDebounce)}
+    return () => { lyricDisplayContainer.current?.removeEventListener("wheel", setupDebounce) }
   }, [])
 
   useEffect(() => {
@@ -173,7 +195,7 @@ const AudioBar = () => {
 
   useEffect(() => {
     const audioTag = audioElement.current;
-    if (!audioTag) {return}
+    if (!audioTag) { return }
     console.log("audio tag exists");
     const updateTimeEvent = () => {
       //console.log(audioTag.currentTime);
@@ -196,33 +218,43 @@ const AudioBar = () => {
       }
     }, 0)
   }
-  const navigateToArtist = (artist:string) => {
+  const navigateToArtist = (artist: string) => {
     console.log("navigating to artist");
     setTimeout(() => {
       navigate(`/artist?id=${artist.replaceAll(" ", "_")}`)
     }, 0)
   }
   const playTrack = () => {
-    audioElement.current?.play()
+    //audioElement.current?.play()
 
     //updateProgressBar(0, true)
   }
   const toggleTrackPlaying = () => {
-      console.log(songInformation?.filePath);
-
+    console.log(songInformation?.filePath);
+    if (audioElement.current) {
+      console.log(audioElement.current.src);
+    }
+    try {
       if (audioElement.current) {
         console.log(audioElement.current.src);
         if (audioElement.current.paused) {
+<<<<<<< HEAD
           
+=======
+>>>>>>> 93eae7d (File protocol changes + blob images)
           audioElement.current.play()
-          
+
           //updateProgressBar(audioElement.current.currentTime, true)
         } else {
           audioElement.current.pause()
           //updateProgressBar(audioElement.current.currentTime, false)
         }
-      console.log("position", audioElement.current?.currentTime)
+        console.log("position", audioElement.current?.currentTime)
+      }
+    } catch (e) {
+      console.log(e);
     }
+      
 
     
   }
@@ -261,7 +293,7 @@ const AudioBar = () => {
     }, 100)
   }
   const seekToPosition = (newPosition: number) => {
-    if (!audioElement.current) {return;}
+    if (!audioElement.current) { return; }
     updateProgressBar(newPosition, true);
     audioElement.current.currentTime = newPosition;
   }
@@ -270,78 +302,80 @@ const AudioBar = () => {
     const transitionElement = event.currentTarget;
     const shouldFill = transitionElement.classList.contains("audio-bar-filled-lyric");
     if (shouldFill && (Date.now() - lastLyricDisplayScroll.current) > lyricScrollDebounce) {
-      transitionElement.scrollIntoView({ block: "center", behavior: "smooth"});
+      transitionElement.scrollIntoView({ block: "center", behavior: "smooth" });
     }
   }
 
-  const QueueRow = ({index, style}) => {
+  const QueueRow = ({ index, style }) => {
     if (currentQueue !== undefined && currentQueue[index]) {
       const song = currentQueue[index];
       return (
-      <div style={style}>
-        <AudioBarQueueTile song={song} highlight={index == currentQueueIndex} index={index} />
-      </div>
-    ) 
+        <div style={style}>
+          <AudioBarQueueTile song={song} highlight={index == currentQueueIndex} index={index} />
+        </div>
+      )
     } else {
       return <></>
     }
-    
+
   }
   return (
     <div className={`audio-bar-container flex  flex-col p-0`}>
       {/* gpu usage bottom 6 left 0 went crazy down using position absolute instead of fixed lol */}
-      
+
       <div className={`transition-all flex bg-neutral-800 flex-col  ${showCurrentlyPlayingScreen ? "h-[calc(100vh-5rem-max(2px,.125rem))]" : "h-0"}`}>
         <NavigationBarSpacer accentGradient={false} />
         <div className="grow overflow-hidden flex-shrink flex px-4 pb-3 pt-0 flex-row">
-          <div className={`grow-[2] basis-0 overflow-hidden flex min-w-0 rounded-2xl`} style={{background: `url(${currentImage})`, backgroundSize: "100% 100%", backgroundPosition: "center", backgroundAttachment: "fixed", backgroundRepeat: "space"}}>
+          <div className={`grow-[2] basis-0 overflow-hidden flex min-w-0 rounded-2xl`} style={{ background: `url(${currentImage})`, backgroundSize: "100% 100%", backgroundPosition: "center", backgroundAttachment: "fixed", backgroundRepeat: "space" }}>
             <div ref={lyricDisplayContainer} className={`grow  rounded-2xl p-2 flex flex-col audio-bar-currently-playing-image-blur items-center overflow-y-auto ${!songInformation?.hasLRC ? "justify-center" : ""}`}>
               <br />
               {!songInformation?.hasLRC ? <div
-                    className={`w-[min(40vw,40vh,24rem)] h-[min(40vw,40vh,24rem)]  flex-shrink-0 rounded-xl shadow-2xl drop-shadow-2xl`}
-                    style={{
-                      backgroundImage: `url(${currentImage})`,
-                      backgroundSize: "cover",
-                      backgroundPosition: "center"
-                    }}
-                  /> : <></> }
+                className={`w-[min(40vw,40vh,24rem)] h-[min(40vw,40vh,24rem)]  flex-shrink-0 rounded-xl shadow-2xl drop-shadow-2xl`}
+                style={{
+                  backgroundImage: `url(${currentImage})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center"
+                }}
+              /> : <></>}
               {currentLyrics?.lyrics.map(lyricBatch => (
                 <div className="text-wrap text-center flex-shrink whitespace-break-spaces leading-snug font-semibold text-[min(10vh,2rem)]">
-                {lyricBatch.map(lyric => 
-                  <span className="transition-all duration-150 ease-out opacity-100 hover:audio-bar-hover-lyric"><span onClick={() => seekToPosition(lyric.timestamp)} className={`${(currentTime + .15) > lyric.timestamp ? "audio-bar-filled-lyric" : "opacity-50"} transition-opacity duration-150 ease-out`} onTransitionEnd={navigateToLyric}>{lyric.line}</span></span>
-                )}
-                <br />
+                  {lyricBatch.map(lyric =>
+                    <span className="transition-all duration-150 ease-out opacity-100 hover:audio-bar-hover-lyric"><span onClick={() => seekToPosition(lyric.timestamp)} className={`${(currentTime + .15) > lyric.timestamp ? "audio-bar-filled-lyric" : "opacity-50"} transition-opacity duration-150 ease-out`} onTransitionEnd={navigateToLyric}>{lyric.line}</span></span>
+                  )}
+                  <br />
                 </div>
-                
+
               ))}
 
               <br />
             </div>
-            
+
           </div>
           <span className={`p-2`}></span>
-          { showCurrentlyPlayingScreen ? 
+          {showCurrentlyPlayingScreen ?
             <div className={`grow rounded-2xl min-w-0 bg-neutral-900  overflow-hidden flex basis-0 flex-col p-4`}>
-            <div className="flex flex-col grow">
-              <h1 className="font-semibold">Queue</h1>
-              <div className="mt-1 flex grow flex-col">
+              <div className="flex flex-col grow">
+                <h1 className="font-semibold">Queue</h1>
                 <hr />
-                <AutoSizer>
-                  {({height, width}) => (
-                    <ReactWindowList itemCount={currentQueue?.length ?? 0} height={height} width={width} itemSize={remSize*4.5}>
-                      {QueueRow}
-                    </ReactWindowList>
+                <div className="mt-1 flex grow flex-col overflow-y-scroll">
+                  { currentQueue?.map((absong, index) => (<AudioBarQueueTile song={absong} index={index} highlight={currentQueueIndex == index} />))
+                  }
+                  {/*<AutoSizer>
+                    {({ height, width }) => (
+                      <ReactWindowList itemCount={currentQueue?.length ?? 0} height={height} width={width} itemSize={remSize * 4.5}>
+                        {QueueRow}
+                      </ReactWindowList>
 
-                  )}
+                    )}
 
-                </AutoSizer>
-                
-                
+                  </AutoSizer>*/}
+
+
+                </div>
               </div>
-            </div>
-          </div> : <></>
+            </div> : <></>
           }
-          
+
         </div>
       </div>
 
@@ -375,12 +409,12 @@ const AudioBar = () => {
             <h1 className=" font-semibold tracking-tight line-clamp-1">{songInformation?.name}</h1>
             <div className="flex flex-row flex-shrink gap-x-1">
               <h1 className="text-sm text-nowrap inline-block text-ellipsis items-center w-full line-clamp-1">
-                {songInformation?.artists.map((val,ind) => (
+                {songInformation?.artists.map((val, ind) => (
                   <>
-                  <span onClick={() => {navigateToArtist(val)}} className="transition-all duration-300 opacity-70 hover:opacity-100 delay-100 ease accent-color-text-hover-thin-underline">
-                  {val}
-                  </span>
-                  {ind < songInformation.artists.length - 1 ? <span className="opacity-70">, </span> : <></>}
+                    <span onClick={() => { navigateToArtist(val) }} className="transition-all duration-300 opacity-70 hover:opacity-100 delay-100 ease accent-color-text-hover-thin-underline">
+                      {val}
+                    </span>
+                    {ind < songInformation.artists.length - 1 ? <span className="opacity-70">, </span> : <></>}
                   </>
                 ))}
                 <span className="opacity-70">&nbsp;|&nbsp;</span>
@@ -399,22 +433,29 @@ const AudioBar = () => {
             onSeeked={() => {
               //updateProgressBar(0, true)
             }}
-            onTimeUpdate={() => {}}
+            onTimeUpdate={() => { }}
             onEnded={trackEnded}
-            onPlay={() => {updatePlaying(true); updateProgressBar(audioElement.current?.currentTime ?? 0, true)}}
-            onPause={() => {updatePlaying(false); updateProgressBar(audioElement.current?.currentTime ?? 0, false)}}
+            onPlay={() => { updatePlaying(true); updateProgressBar(audioElement.current?.currentTime ?? 0, true) }}
+            onPause={() => { updatePlaying(false); updateProgressBar(audioElement.current?.currentTime ?? 0, false) }}
             onCanPlay={() => {
               playTrack()
             }}
+<<<<<<< HEAD
             autoPlay={false}
             src={`file://${songInformation?.filePath}`}
           ></audio>
+=======
+            autoPlay={true}
+            src={`${songInformation?.filePath}`}
+          >
+          </audio>
+>>>>>>> 93eae7d (File protocol changes + blob images)
           <div className="grow" />
           <div className="flex flex-row flex-shrink-0 gap-x-2">
-            
+
             <div
               onClick={() => {
-                
+
                 updateShowCurrentlyPlayingScreen(!showCurrentlyPlayingScreen)
               }}
               className={`bg-transparent rounded-full hover:bg-black p-4 transition-opacity`}

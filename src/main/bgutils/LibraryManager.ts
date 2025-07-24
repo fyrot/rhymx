@@ -1,6 +1,7 @@
 import * as fs from "fs"
 import { app } from "electron"
 import { join, extname, basename, format, parse } from "path"
+import { pathToFileURL } from "url"
 import { Song, Album, AudioBarSong, Artist } from "./songInformation"
 import * as jsmediatags from "jsmediatags"
 import { TagType } from "jsmediatags/types"
@@ -144,7 +145,7 @@ export class LibraryManager {
             trackNo: metadata.common.track.no ?? 1,
             artists: processedArtists,
             albumRefId: albumName,
-            filePath: filePath,
+            filePath: pathToFileURL(filePath).href,
             songId: "",
             duration: metadata.format.duration ?? 0,
             hasLRC: lrcAttachmentExists

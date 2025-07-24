@@ -10,7 +10,7 @@ const AudioBarQueueTile = ({ song, highlight, index }: { song: AudioBarSong; hig
   return (
     <div
       
-      className={`bg-black  ${highlight ? "bg-opacity-50" : "bg-opacity-0"} items-center hover:bg-opacity-30 transition-opacity flex flex-row p-3 gap-x-3`}
+      className={`bg-black  ${highlight ? "bg-opacity-50" : "bg-opacity-0"} items-center hover:bg-opacity-30 transition-all duration-300 flex flex-row p-3 gap-x-3`}
     >
       <div
         onClick={() => {window.electronAPI.queueUpdateQueueAndIndex(null, index);}}

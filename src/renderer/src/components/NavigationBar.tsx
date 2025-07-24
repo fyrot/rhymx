@@ -19,7 +19,7 @@ const NavigationBar = () => {
     //{name: "Preferences", icon: <LuSettings  />, href: "/preferences"},
     
   ]
-
+  const [platform, updatePlatform] = useState<string>("");
   const navigation = useNavigate();
   const navigationPosition = useLocation();
   const navigationHistoryExists = !(navigationPosition.key == "default"  || (navigationPosition.pathname == "/" || navigationPosition.pathname == "/search" || navigationPosition.pathname == "/library"));
@@ -29,6 +29,7 @@ const NavigationBar = () => {
     const unmaximized = () => {setIsMaximized(false);}
     window.electronAPI.windowMaximized(maximized);
     window.electronAPI.windowUnmaximized(unmaximized);
+    window.electronAPI.retrieveOS().then((osName) => {updatePlatform(osName); console.log(osName);})
   }, [])
 
   const navigateToPage = (link: string) => {
@@ -40,7 +41,7 @@ const NavigationBar = () => {
   //console.log(navigationPosition.pathname);
   //console.log(navigationHistoryExists);
   return (
-    <div className="w-full draggable-appbar p-2 h-14 z-10 fixed flex flex-row justify-center items-center transform-gpu">
+    <div className={`w-full draggable-appbar p-2 h-14 z-10 fixed flex ${platform !== "darwin" ? "flex-row" : "flex-row-reverse"} justify-center items-center`}>
       
       <div className="flex flex-row transition-all  duration-300 items-center bg-black-translucent rounded-full">
         <div className={`${navigationHistoryExists ? "w-12" : "w-0"} overflow-hidden transition-all duration-300 ease-out flex flex-row`}>
@@ -69,7 +70,7 @@ const NavigationBar = () => {
         {/* This is empty to serve as a 
             spacer between the left and right content */}
       </div>
-      <div className="flex flex-row items-center bg-black-translucent rounded-full">
+      <div className={`${platform !== "darwin" ? "flex" : "hidden" } flex-row items-center bg-black-translucent rounded-full`}>
         <div className="w-12 mr-2 flex items-center py-2 navigation-bar-icon-bg rounded-full none-draggable-appbar justify-center" onClick={() => {console.log("minimizing application.."); window.electronAPI.minimizeWindow();}}>
             <LuMinus className="text-xl grow none-draggable-appbar navigation-bar-icon" />
         </div>

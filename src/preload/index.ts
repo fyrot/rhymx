@@ -17,6 +17,7 @@ if (process.contextIsolated) {
       windowMaximized: (callback) => {ipcRenderer.on("windowMaximized", callback);},
       windowUnmaximized: (callback) => {ipcRenderer.on("windowUnmaximized", callback);},
       minimizeWindow: () => {ipcRenderer.send("minimizeWindow");},
+      retrieveOS: () => {return ipcRenderer.invoke("retrieveOS");},
       libraryPrefAddNewSource: ():Promise<string[]> => {return ipcRenderer.invoke("libraryPref:addNewSource")},
       libraryPrefRetrieveSourceList: () => {return ipcRenderer.invoke("libraryPref:retrieveSourceList");},
       libraryPrefUpdateSourceList: (sources:string[]) => {ipcRenderer.send("libraryPref:updateSourceList", sources);},

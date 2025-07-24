@@ -1,8 +1,7 @@
-import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog, systemPreferences } from 'electron'
 import { join, parse } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import * as fs from 'fs';
 import { LibraryManager } from './bgutils/LibraryManager';
 import { Album, Artist, AudioBarSong, Song } from './bgutils/songInformation';
 import { QueueManager } from './bgutils/QueueManager';
@@ -27,11 +26,15 @@ function closeWindow(event, shouldClose):void {
   const window = BrowserWindow.fromWebContents(event.sender);
   window?.close();
 }
+async function retrieveOS() {
+  return process.platform.toString();
+}
 
 function queueNotifyAudioBar() {
   if (globalMainWindow !== undefined) {
     globalMainWindow.webContents.send("queue:notifyAudioBar");
   }
+
   pluginEmitter.emit("pluginEvents:currentlyPlayingChanged", queueManager.retrieveCurrent());
 }
 function queueNotifySkipTracks(event, tracksSkipped:number) {
@@ -167,6 +170,7 @@ function createWindow(): void {
     frame: false,
     visualEffectState: "active",
     titleBarStyle: "hidden",
+    trafficLightPosition: {x: 12, y:12},
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
@@ -236,6 +240,7 @@ app.whenReady().then(() => {
   ipcMain.on("closeWindow", closeWindow);
   ipcMain.on("toggleMaximizeWindow", toggleMaximizeWindow);
   ipcMain.on("minimizeWindow", minimizeWindow);
+  ipcMain.handle("retrieveOS", retrieveOS); 
   ipcMain.handle("libraryPref:addNewSource", libraryPrefAddNewSource);
   ipcMain.handle("libraryPref:retrieveSourceList", libraryPrefRetrieveSourceList);
   ipcMain.on("libraryPref:updateSourceList", libraryPrefUpdateSourceList);
