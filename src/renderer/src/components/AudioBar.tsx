@@ -238,10 +238,6 @@ const AudioBar = () => {
       if (audioElement.current) {
         console.log(audioElement.current.src);
         if (audioElement.current.paused) {
-<<<<<<< HEAD
-          
-=======
->>>>>>> 93eae7d (File protocol changes + blob images)
           audioElement.current.play()
 
           //updateProgressBar(audioElement.current.currentTime, true)
@@ -440,16 +436,10 @@ const AudioBar = () => {
             onCanPlay={() => {
               playTrack()
             }}
-<<<<<<< HEAD
-            autoPlay={false}
-            src={`file://${songInformation?.filePath}`}
-          ></audio>
-=======
             autoPlay={true}
             src={`${songInformation?.filePath}`}
           >
           </audio>
->>>>>>> 93eae7d (File protocol changes + blob images)
           <div className="grow" />
           <div className="flex flex-row flex-shrink-0 gap-x-2">
 
