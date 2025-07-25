@@ -70,6 +70,9 @@ const NavigationBar = () => {
         {/* This is empty to serve as a 
             spacer between the left and right content */}
       </div>
+      {/*{platform == "darwin" ? <div className="flex items-center w-20 h-8 bg-black-translucent rounded-full">
+
+      </div> : <></>}*/}
       <div className={`${platform !== "darwin" ? "flex" : "hidden" } flex-row items-center bg-black-translucent rounded-full`}>
         <div className="w-12 mr-2 flex items-center py-2 navigation-bar-icon-bg rounded-full none-draggable-appbar justify-center" onClick={() => {console.log("minimizing application.."); window.electronAPI.minimizeWindow();}}>
             <LuMinus className="text-xl grow none-draggable-appbar navigation-bar-icon" />

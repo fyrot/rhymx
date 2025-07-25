@@ -10,9 +10,9 @@ export default function HomePage() {
   }
   return (
     <div>
-      <div className="min-h-screen bg-gray-500">
-        <NavigationBarSpacer accentGradient={true} />
-        <h1 className="text-4xl font-semibold ml-4">...</h1>
+      <div className="min-h-screen bg-neutral-800">
+        <NavigationBarSpacer accentGradient={false} />
+        {/*<h1 className="text-4xl font-semibold ml-4">...</h1>*/}
         <div className="px-4">
           <PlaylistCarousel />
         </div>

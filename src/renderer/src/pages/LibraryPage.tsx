@@ -14,7 +14,7 @@ export default function LibraryPage() {
   }, []);
   return (
     <div>
-      <div className="min-h-screen bg-gray-500 flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-neutral-800 flex flex-col items-center justify-center">
         <NavigationBarSpacer accentGradient={false} />
         <div className="grow flex flex-col w-full items-center">
           <div className="p-4 w-full">

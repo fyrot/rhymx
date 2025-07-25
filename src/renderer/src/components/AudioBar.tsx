@@ -352,9 +352,8 @@ const AudioBar = () => {
             <div className={`grow rounded-2xl min-w-0 bg-neutral-900  overflow-hidden flex basis-0 flex-col p-4`}>
               <div className="flex flex-col grow">
                 <h1 className="font-semibold">Queue</h1>
-                <hr />
                 <div className="mt-1 flex grow flex-col overflow-y-scroll">
-                  { currentQueue?.map((absong, index) => (<AudioBarQueueTile song={absong} index={index} highlight={currentQueueIndex == index} />))
+                  { currentQueue?.map((absong, index) => (<><AudioBarQueueTile song={absong} index={index} highlight={currentQueueIndex == index} /><hr className="opacity-25" /></>))
                   }
                   {/*<AutoSizer>
                     {({ height, width }) => (
@@ -401,10 +400,10 @@ const AudioBar = () => {
               backgroundPosition: "center"
             }}
           ></div>
-          <div className="flex flex-shrink flex-col pl-4">
-            <h1 className=" font-semibold tracking-tight line-clamp-1">{songInformation?.name}</h1>
+          <div className="flex basis-1/2 flex-col pl-4">
+            <h1 className="font-semibold tracking-tight line-clamp-1">{songInformation?.name}</h1>
             <div className="flex flex-row flex-shrink gap-x-1">
-              <h1 className="text-sm text-nowrap inline-block text-ellipsis items-center w-full line-clamp-1">
+              <h1 className="text-sm text-nowrap text-ellipsis flex-shrink items-center w-full line-clamp-1">
                 {songInformation?.artists.map((val, ind) => (
                   <>
                     <span onClick={() => { navigateToArtist(val) }} className="transition-all duration-300 opacity-70 hover:opacity-100 delay-100 ease accent-color-text-hover-thin-underline">

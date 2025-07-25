@@ -170,7 +170,7 @@ function createWindow(): void {
     frame: false,
     visualEffectState: "active",
     titleBarStyle: "hidden",
-    trafficLightPosition: {x: 12, y:12},
+    trafficLightPosition: {x: 20, y:20},
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {

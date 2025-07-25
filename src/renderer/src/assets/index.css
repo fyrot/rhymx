@@ -113,6 +113,19 @@ html {
 	background-position: 0 100%;
 }
 
+.accent-color-text-hover-thin-multi-underline {
+    text-decoration: none;
+    display: inline;
+    background-image: linear-gradient(rgba(var(--accent-color), 1.0), rgba(var(--accent-color), 1.0));
+    background-position: 0% 1em;
+    background-repeat: no-repeat;
+    background-size: 0% 2px;
+    transition: background-size 0.3 ease-in-out 0.2s
+}
+.accent-color-text-hover-thin-multi-underline:hover {
+    background-size: 100% 2px;
+}
+
 .accent-color-hr-hover-partial {
     color: rgba(var(--accent-color), 1.0);
     background-color: rgba(var(--accent-color), 1.0);

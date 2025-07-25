@@ -1,6 +1,7 @@
 import { AudioBarSong, Song } from "src/main/bgutils/songInformation"
 import { LuEllipsisVertical, LuPlay } from "react-icons/lu"
 import { toast } from "sonner";
+import { queueToast } from "@renderer/helper/QueueToast";
 function timeToMMSS(seconds: number):string {
   const mm = Math.floor(seconds/60);
   const ss = Math.round(seconds-(60*mm));
@@ -38,7 +39,8 @@ const AlbumSongTile = ({ song, trackNo}: { song: Song; trackNo: number }) => {
         albumImage: album.albumImage,
         albumName: album.name
       })
-      toast(`${song.name} added to queue.`);
+      queueToast({title: song.name, description: "added to queue"})
+      //toast(`${song.name} added to queue.`);
     }
   }
   return (
