@@ -8,7 +8,7 @@ export default function Layout() {
       <div className="flex-grow flex-shrink overflow-y-auto scroll-smooth">
         <Outlet />
       </div>
-      <Toaster visibleToasts={3} offset={{top: "4rem", right: "0.5rem"}} position="bottom-left"/>
+      <Toaster visibleToasts={3} offset={{bottom: "6rem", left: "1rem"}} position="bottom-left"/>
       <div className="bg-neutral-700">
         <AudioBar />
       </div>
