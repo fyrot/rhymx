@@ -23,6 +23,9 @@
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^4.0.0",
+    "@radix-ui/react-context-menu": "^2.2.15",
+    "@types/adm-zip": "^0.5.7",
+    "adm-zip": "^0.5.16",
     "autoprefixer": "^10.4.21",
     "jsmediatags": "^3.9.7",
     "music-metadata": "^11.6.0",

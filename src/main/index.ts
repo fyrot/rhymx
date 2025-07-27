@@ -1,5 +1,5 @@
 import { app, shell, BrowserWindow, ipcMain, dialog, systemPreferences } from 'electron'
-import { join, parse } from 'path'
+import { basename, extname, join, parse } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { LibraryManager } from './bgutils/LibraryManager';
@@ -7,6 +7,8 @@ import { Album, Artist, AudioBarSong, Song } from './bgutils/songInformation';
 import { QueueManager } from './bgutils/QueueManager';
 import EventEmitter from 'events';
 import { LRCData } from './bgutils/LRCParserUtils';
+import * as fs from "fs";
+import AdmZip, * as admzip from "adm-zip";
 app.commandLine.appendSwitch("enable-features", "OverlayScrollbar")
 
 class PluginEmitter extends EventEmitter {}
@@ -21,6 +23,7 @@ libraryManager.startup();
 
 let globalMainWindow:BrowserWindow; 
 
+pluginsGetSourceFolders();
 
 function closeWindow(event, shouldClose):void {
   const window = BrowserWindow.fromWebContents(event.sender);
@@ -135,13 +138,57 @@ async function libraryRetrieveArtistById(event, id):Promise<Artist | undefined> 
   return libraryManager.libraryRetrieveArtistById(id);
 }
 
+function pluginsGetSourceFolders() {
+  const pluginFolder = join(app.getPath("userData"), "plugins");
+  if (!fs.existsSync(pluginFolder)) {
+    fs.mkdirSync(pluginFolder);
+  }
+  console.log(pluginFolder);
+  return fs.readdirSync(pluginFolder, {withFileTypes: true}).filter(directory => directory.isDirectory()).map(directory => directory.parentPath);
+}
+
+function pluginsRegisterPluginEvents() {
+  // we can run this at start-up
+  const pluginFolders = pluginsGetSourceFolders();
+  for (const folderPath of pluginFolders) {
+    const pluginFilePath = join(folderPath, "plugin.js");
+    
+    if (fs.existsSync(pluginFilePath)) {
+      const events = require(pluginFilePath);
+      for (const eventPair of events.events) {
+        pluginEmitter.on(eventPair.eventName, (data) => {
+          eventPair.callback(data);
+        })
+      }
+    }
+  }
+}
+
 function pluginsAddSources(event):void {
   dialog.showOpenDialog({
 
     properties: ["openFile", "dontAddToRecent", "multiSelections"]
-      
+    
     }).then((response) => {
+      
+      const pluginFolder = join(app.getPath("userData"), "plugins");
       if (!response.canceled) {
+        console.log("response not cancelled");
+        for (const providedFile of response.filePaths) {
+          const zipFile = new AdmZip(providedFile);
+          const zipDescriptorLocation = basename(providedFile, extname(providedFile)) +"/plugin.json";
+          console.log(zipDescriptorLocation);
+          const zipDescriptor = zipFile.getEntry(zipDescriptorLocation);
+          if (zipDescriptor) {
+            console.log("zip descriptor found")
+            zipFile.extractAllTo(pluginFolder, true);
+
+          }
+        }
+      }
+      
+      // copy and extract the provided file into its own folder 
+      /*if (!response.canceled) {
         for (const filePath of response.filePaths) {
           const events = require(filePath);
           for (const eventPair of events.events) {
@@ -153,7 +200,8 @@ function pluginsAddSources(event):void {
         }
 
         }
-      }
+      }*/
+
     })
   }
 

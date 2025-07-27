@@ -27,10 +27,11 @@ const AlbumsCarousel = ( {albumList, title, id}: {albumList: Album[], title: str
   return (
     <div className="flex flex-col w-full">
       <div className="flex flex-row">
+        
+        <h1 className="font-semibold ml-2 text-5xl">{title}</h1>
         <div onClick={() => {updateOpened(!opened);}} className="py-2 px-4 transition-all bg-[rgba(0,0,0,0.5)] hover:bg-[rgba(0,0,0,0.75)] text-white text-opacity-50 hover:text-opacity-100 rounded-full my-2">
           {opened ? <LuChevronUp /> : <LuChevronDown />}
         </div>
-        <h1 className="font-semibold ml-2 text-5xl">{title}</h1>
         <div className="grow" />
         
       </div>  
