@@ -1,5 +1,6 @@
 import { LRCData } from "../main/bgutils/LRCParserUtils";
 import { Album, Song, AudioBarSong, Artist } from "../main/bgutils/songInformation";
+import { PluginDisplay } from "../main/bgutils/pluginInformation";
 export interface IElectronAPI {
     closeWindow: (shouldClose: boolean) => void,
     toggleMaximizeWindow: () => void,
@@ -26,7 +27,10 @@ export interface IElectronAPI {
     queueNotifySkipTracks: (tracksSkipped:number) => void,
     currentlyPlayingUpdateVisibility: (visibility:boolean) => void,
     currentlyPlayingReceiveVisibility: (callback) => void,
-    pluginsAddSources: () => void
+    pluginsNotifyUpdate: (callback) => void,
+    pluginsAddSources: () => void,
+    pluginsRetrieveSources: () => Promise<PluginDisplay[]>,
+    pluginsDeleteSource: (id:string) => void 
 }
 declare global {
     interface Window {

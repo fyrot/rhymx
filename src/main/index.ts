@@ -9,6 +9,8 @@ import EventEmitter from 'events';
 import { LRCData } from './bgutils/LRCParserUtils';
 import * as fs from "fs";
 import AdmZip, * as admzip from "adm-zip";
+import plugin from 'tailwindcss';
+import { PluginDisplay } from './bgutils/pluginInformation';
 app.commandLine.appendSwitch("enable-features", "OverlayScrollbar")
 
 class PluginEmitter extends EventEmitter {}
@@ -138,6 +140,10 @@ async function libraryRetrieveArtistById(event, id):Promise<Artist | undefined> 
   return libraryManager.libraryRetrieveArtistById(id);
 }
 
+function pluginsNotifyUpdate() {
+  globalMainWindow.webContents.send("plugins:notifyUpdate")
+}
+
 function pluginsGetSourceFolders() {
   const pluginFolder = join(app.getPath("userData"), "plugins");
   if (!fs.existsSync(pluginFolder)) {
@@ -186,7 +192,7 @@ function pluginsAddSources(event):void {
           }
         }
       }
-      
+      pluginsNotifyUpdate();
       // copy and extract the provided file into its own folder 
       /*if (!response.canceled) {
         for (const filePath of response.filePaths) {
@@ -204,9 +210,33 @@ function pluginsAddSources(event):void {
 
     })
   }
+async function pluginsRetrieveSources():Promise<PluginDisplay[]> {
+  const pluginFolderPath = join(app.getPath("userData"), "plugins");
+  const pluginFolders = fs.readdirSync(pluginFolderPath, {withFileTypes: true});
+  const pluginDisplayData:PluginDisplay[] = [];
+  for (const plugin of pluginFolders) {
+    const descriptorPath = join(plugin.parentPath, plugin.name, "plugin.json")
+    if (plugin.isDirectory() && fs.existsSync(descriptorPath)) {
+      const pluginJSON = JSON.parse(fs.readFileSync(descriptorPath).toString("utf8"))
+      pluginDisplayData.push({
+        id: pluginJSON["id"] ?? "",
+        displayName: pluginJSON["displayName"] ?? "",
+        displayColor: pluginJSON["displayColor"] ?? ""
+      });
+    }
+  }
+  return pluginDisplayData;
+}
+function pluginDeleteSource(event, id):void {
+  const pluginFolderPath = join(app.getPath("userData"), "plugins");
+  const deletedPluginPath = join(pluginFolderPath, id);
+  if (fs.existsSync(deletedPluginPath)) {
+    fs.rmSync(deletedPluginPath, {recursive: true});
 
+  }
+  pluginsNotifyUpdate();
 
-
+}
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -307,6 +337,8 @@ app.whenReady().then(() => {
   ipcMain.on("queue:notifySkipTracks", queueNotifySkipTracks);
   ipcMain.on("currentlyPlaying:updateVisibility", currentlyPlayingUpdateVisibility);
   ipcMain.on("plugins:addSources", pluginsAddSources);
+  ipcMain.handle("plugins:retrieveSources", pluginsRetrieveSources);
+  ipcMain.on("plugins:deleteSource", pluginDeleteSource);
   createWindow()
 
   app.on('activate', function () {

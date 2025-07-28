@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import { AudioBarSong, Song } from '../main/bgutils/songInformation';
-
+import { PluginDisplay } from '../main/bgutils/pluginInformation';
 // Custom APIs for renderer
 const api = {}
 
@@ -37,8 +37,10 @@ if (process.contextIsolated) {
       queueNotifyTrackEnded: () => {ipcRenderer.send("queue:notifyTrackEnded");},
       queueNotifySkipTracks: (tracksSkipped: number) => {ipcRenderer.send("queue:notifySkipTracks", tracksSkipped);},
       queueNotifyAudioBarQueue: (callback) => {ipcRenderer.on("queue:notifyAudioBarQueue", (_event, receivedQueue) => callback(receivedQueue))},
-      pluginsAddSources: () => {ipcRenderer.send("plugins:addSources");}
-    
+      pluginsNotifyUpdate: (callback) => {ipcRenderer.on("plugins:notifyUpdate", (_event) => callback)},
+      pluginsAddSources: () => {ipcRenderer.send("plugins:addSources");},
+      pluginsRetrieveSources: () => {return ipcRenderer.invoke("plugins:retrieveSources")},
+      pluginsDeleteSource: (id:string) => {ipcRenderer.send("plugins:deleteSource", id)}    
     })
   } catch (error) {
     console.log(error);
