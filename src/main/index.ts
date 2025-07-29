@@ -10,7 +10,7 @@ import { LRCData } from './bgutils/LRCParserUtils';
 import * as fs from "fs";
 import AdmZip, * as admzip from "adm-zip";
 import plugin from 'tailwindcss';
-import { PluginDisplay } from './bgutils/pluginInformation';
+import { PluginFieldSchema, PluginSchema } from './bgutils/pluginInformation';
 app.commandLine.appendSwitch("enable-features", "OverlayScrollbar")
 
 class PluginEmitter extends EventEmitter {}
@@ -210,22 +210,23 @@ function pluginsAddSources(event):void {
 
     })
   }
-async function pluginsRetrieveSources():Promise<PluginDisplay[]> {
+async function pluginsRetrieveSources():Promise<PluginSchema[]> {
   const pluginFolderPath = join(app.getPath("userData"), "plugins");
   const pluginFolders = fs.readdirSync(pluginFolderPath, {withFileTypes: true});
-  const pluginDisplayData:PluginDisplay[] = [];
+  const PluginSchemaData:PluginSchema[] = [];
   for (const plugin of pluginFolders) {
     const descriptorPath = join(plugin.parentPath, plugin.name, "plugin.json")
     if (plugin.isDirectory() && fs.existsSync(descriptorPath)) {
       const pluginJSON = JSON.parse(fs.readFileSync(descriptorPath).toString("utf8"))
-      pluginDisplayData.push({
+      PluginSchemaData.push({
         id: pluginJSON["id"] ?? "",
         displayName: pluginJSON["displayName"] ?? "",
-        displayColor: pluginJSON["displayColor"] ?? ""
+        displayColor: pluginJSON["displayColor"] ?? "",
+        fields: pluginJSON["fields"] ?? []
       });
     }
   }
-  return pluginDisplayData;
+  return PluginSchemaData;
 }
 function pluginDeleteSource(event, id):void {
   const pluginFolderPath = join(app.getPath("userData"), "plugins");
@@ -236,6 +237,23 @@ function pluginDeleteSource(event, id):void {
   }
   pluginsNotifyUpdate();
 
+}
+function pluginsUpdateFields(event, id, newFields) {
+  const pluginJSONPath = join(app.getPath("userData"), "plugins", id, "plugin.json");
+  console.log(pluginJSONPath)
+  if (fs.existsSync(pluginJSONPath)) {
+    const pluginJSON = JSON.parse(fs.readFileSync(pluginJSONPath).toString("utf8"))
+    console.log("pluginJSON")
+    const pluginJSONFields:PluginFieldSchema[] = pluginJSON["fields"];
+    for (const entry of pluginJSONFields) {
+      if (newFields[entry.label]) {
+        entry.value = newFields[entry.label];
+      }
+    }
+    console.log(pluginJSON)
+    fs.writeFileSync(pluginJSONPath, JSON.stringify(pluginJSON));
+    pluginsNotifyUpdate();
+  }
 }
 function createWindow(): void {
   // Create the browser window.
@@ -339,6 +357,7 @@ app.whenReady().then(() => {
   ipcMain.on("plugins:addSources", pluginsAddSources);
   ipcMain.handle("plugins:retrieveSources", pluginsRetrieveSources);
   ipcMain.on("plugins:deleteSource", pluginDeleteSource);
+  ipcMain.on("plugins:updateFields", pluginsUpdateFields);
   createWindow()
 
   app.on('activate', function () {

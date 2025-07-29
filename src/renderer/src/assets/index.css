@@ -264,6 +264,28 @@ html {
     animation: fill-animation 0.5s forwards;
 
 }
+.plugins-dialog-overlay {
+    background-color: rgba(0, 0, 0, 0.5);
+	position: fixed;
+	inset: 0;
+	
+
+}
+
+.plugins-dialog-content {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 2rem;
+    width: 90vw;
+    max-width: 64rem;
+    max-height: 90vh;
+    padding: 2rem;
+}
+:focus {
+    outline: none;
+}
 
 /*html {
   scrollbar-width: none;  
