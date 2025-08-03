@@ -51,7 +51,7 @@ export default function PreferencesPluginsPage() {
             <div className="w-full flex flex-col p-4">
               {
                 plugins.map(plugin => (
-                  <div key={plugin.id} className="rounded-full flex items-center flex-row p-4" style={{background: plugin.displayColor}}>
+                  <div key={plugin.id} className="rounded-2xl flex items-center flex-row gap-x-4 p-4" style={{background: plugin.displayColor}}>
                     <h1 className="p-2 font-semibold">{plugin.displayName}</h1>
                     <div className="grow" />
                     {plugin.fields.length > 0 ? <Dialog.Root onOpenChange={(open) => {
@@ -59,7 +59,7 @@ export default function PreferencesPluginsPage() {
                         currentPluginId.current = plugin.id;
                       }
                     }}>
-                      <Dialog.Trigger asChild><span className="p-2 rounded-full bg-black bg-opacity-0 hover:bg-opacity-50 transition-all"><LuBookOpenText /></span>
+                      <Dialog.Trigger asChild><span className="p-4 rounded-full bg-black bg-opacity-0 hover:bg-opacity-50 transition-all"><LuBookOpenText /></span>
                       </Dialog.Trigger>
                       <Dialog.Portal>
                         <Dialog.Overlay className="plugins-dialog-overlay" />
@@ -86,24 +86,20 @@ export default function PreferencesPluginsPage() {
                         </Dialog.Content>
                       </Dialog.Portal>
                     </Dialog.Root> : <></>}
-                    <span className="p-2 rounded-full bg-black bg-opacity-0 hover:bg-opacity-50 transition-all" onClick={() => removePlugin(plugin.id)}><LuX /></span>
+                    <span className="p-4 rounded-full bg-black bg-opacity-0 hover:bg-opacity-50 transition-all" onClick={() => removePlugin(plugin.id)}><LuX /></span>
                   </div>
                 ))
               }
               <br />
               <div className="flex flex-row">
-                <div onClick={() => {window.electronAPI.pluginsAddSources();}} className="inline-flex bg-black opacity-50 hover:opacity-100 flex-row gap-x-2 border-2 rounded-full p-3 items-center">
-                  <LuFile className="text-xl" />
-                  <h1 className="inline-block">Add Plugins</h1>
+                <div onClick={() => {window.electronAPI.pluginsAddSources();}} className="border-white bg-transparent hover:bg-neutral-900 border-2 px-4 py-3 transition-all duration-300 ease-out items-center rounded-full flex-row inline-flex opacity-50 hover:opacity-100">
+                  <LuFile className="text-2xl" />
+                  <h1 className="text-sm pl-2">Add Plugins</h1>
                 </div>
+                
               </div>
               <br />
-              <div className="flex flex-row">
-                <div className="inline-flex bg-black opacity-50 hover:opacity-100 flex-row gap-x-2 rounded-full p-3">
-                  <LuLoader className="text-xl" />
-                  <h1>Load Plugins</h1>
-                </div>
-              </div>
+              
             </div>
           </div>
         </div>
