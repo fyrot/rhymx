@@ -275,7 +275,6 @@ html {
 	position: fixed;
 	inset: 0;
 	animation: dialog-overlay-animation 0.3s ease-out;
-
 }
 
 @keyframes dialog-content-animation {

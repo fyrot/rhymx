@@ -3,7 +3,7 @@ import NavigationBarSpacer from "@renderer/components/NavigationBarSpacer"
 import { useEffect, useState, useLayoutEffect } from "react"
 import { LuDisc } from "react-icons/lu"
 import { useParams, useSearchParams } from "react-router"
-import { Album } from "src/main/bgutils/songInformation"
+import { Album, Song, AudioBarSong } from "src/main/bgutils/songInformation"
 export default function AlbumPage() {
   const [abc, setAbc] = useSearchParams()
   const [album, updateAlbum] = useState<Album>()
@@ -21,7 +21,27 @@ export default function AlbumPage() {
       })
   }, [abc])
 
-  
+  const playAlbum = async (song:Song) => {
+    const album = await window.electronAPI.libraryRetrieveAlbumById(song.albumRefId);
+    const audioBarQueue:AudioBarSong[] = [];
+    let index = 0;
+    let playIndex = 0;
+    album?.discs.entries().forEach((pair) => {
+      pair[1].forEach((item) => {
+        if (item.filePath == song.filePath) {
+          playIndex = index;
+        }
+        audioBarQueue.push({
+          song: item,
+          albumImage: album.albumImage,
+          albumName: album.name 
+        })
+        index++;
+      })
+    });
+    window.electronAPI.queueUpdateQueueAndIndex(audioBarQueue,playIndex);
+    console.log(song)
+  }
 
   return (
     <div>
@@ -107,14 +127,14 @@ export default function AlbumPage() {
               album.discs
                 .values()
                 .toArray()[0]
-                .map((song, index) => <AlbumSongTile key={index} song={song} trackNo={index + 1} />)
+                .map((song, index) => <AlbumSongTile key={index} song={song} trackNo={index + 1} playFunction={() => {playAlbum(song);}} />)
             ) : <></>
             } 
             {(album?.discs.size ?? 0) >= 2 ? album?.discs.entries().toArray().sort((a, b) => a[0].localeCompare(b[0])).map((value) => 
                 <>
                 
                 <div className="flex items-center p-2 flex-row gap-x-2"><LuDisc /><span>{value[0]}</span> <hr className="grow" /> </div>
-                {value[1].map((song, index) => <AlbumSongTile key={index} song={song} trackNo={index+1} />)}
+                {value[1].map((song, index) => <AlbumSongTile key={index} song={song} trackNo={index+1} playFunction={() => {playAlbum(song);}} />)}
                 </>
             ) : <></>}  
           </div>

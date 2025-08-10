@@ -56,6 +56,9 @@ export default function PreferencesPluginsPage() {
                     <div className="grow" />
                     {plugin.fields.length > 0 ? <Dialog.Root onOpenChange={(open) => {
                       if (open) {
+                        window.electronAPI.pluginsRetrieveSources().then((response) => {
+                          updatePlugins(response);
+                        })
                         currentPluginId.current = plugin.id;
                       }
                     }}>
@@ -77,7 +80,7 @@ export default function PreferencesPluginsPage() {
                                 plugin.fields.map((field) => (
                                   <fieldset key={`${plugin.id}-${field.label}`} className="w-full flex gap-x-2 items-center" >
                                     <label className="min-w-32 flex-shrink-0 drop-shadow-sm">{field.label}</label>
-                                    <input  name={`${field.label}`} spellCheck={false} multiple={true} className="bg-black grow rounded-xl px-2 py-1 transition-all focus:py-2 bg-white text-black" defaultValue={field.value} />
+                                    <input  name={`${field.label}`} spellCheck={false} multiple={true} className="bg-black grow rounded-xl px-2 py-2 transition-all focus:py-4 bg-white text-black" defaultValue={field.value} />
                                   </fieldset>
                                 ))
                               }

@@ -2,6 +2,7 @@ export interface Song {
   name: string,
   artists: string[],  
   filePath: string,
+  path: string,
   trackNo: number,
   songId: string,
   albumRefId: string,
@@ -17,6 +18,15 @@ export interface Album {
     dataUrl: string
   },
   albumId: string
+}
+export interface Playlist {
+  name: string, 
+  songs: Song[],
+  albumImage: {
+    hasData: boolean,
+    dataUrl: string
+  }
+  playlistId: string
 }
 export interface Artist {
   artistId: string,

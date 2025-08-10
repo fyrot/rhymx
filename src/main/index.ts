@@ -26,7 +26,7 @@ libraryManager.startup();
 let globalMainWindow:BrowserWindow; 
 
 pluginsGetSourceFolders();
-
+//pluginsRegisterPluginEvents();
 function closeWindow(event, shouldClose):void {
   const window = BrowserWindow.fromWebContents(event.sender);
   window?.close();
@@ -64,7 +64,8 @@ function queueUpdateAddToQueue(event, newSong:AudioBarSong):void {
 
 // invokes HAVE to be async
 async function queueRetrieveCurrent(event):Promise<[AudioBarSong, number]> {
-  return queueManager.retrieveCurrent();
+  const current = await queueManager.retrieveCurrent();
+  return current;
 }
 async function queueRetrieveCurrentLRC(event, filePath:string):Promise<LRCData> {
   console.log(filePath);
@@ -139,7 +140,21 @@ async function libraryRetrieveAlbumNameById(event, id):Promise<string> {
 async function libraryRetrieveArtistById(event, id):Promise<Artist | undefined> {
   return libraryManager.libraryRetrieveArtistById(id);
 }
-
+function libraryCreateNewPlaylist(event, name):void {
+  libraryManager.libraryCreateNewPlaylist(name);
+}
+function libraryAddSongToPlaylist(event, song, playlistId) {
+  libraryManager.libraryAddSongToPlaylist(song, playlistId);
+}
+async function libraryRetrieveAllPlaylists(event) {
+  return libraryManager.libraryRetrieveAllPlaylists();
+}
+async function libraryRetrieveAllPlaylistsNamesAndIds(event) {
+  return libraryManager.libraryRetrieveAllPlaylistsNamesAndIds()
+}
+async function libraryRetrievePlaylistById(event, id) {
+  return libraryManager.libraryRetrievePlaylistById(id);
+}
 function pluginsNotifyUpdate() {
   globalMainWindow.webContents.send("plugins:notifyUpdate")
 }
@@ -150,18 +165,20 @@ function pluginsGetSourceFolders() {
     fs.mkdirSync(pluginFolder);
   }
   console.log(pluginFolder);
-  return fs.readdirSync(pluginFolder, {withFileTypes: true}).filter(directory => directory.isDirectory()).map(directory => directory.parentPath);
+  return fs.readdirSync(pluginFolder, {withFileTypes: true}).filter(directory => directory.isDirectory()).map(directory => join(directory.parentPath, directory.name));
 }
 
 function pluginsRegisterPluginEvents() {
   // we can run this at start-up
   const pluginFolders = pluginsGetSourceFolders();
+  console.log("registering", pluginFolders)
   for (const folderPath of pluginFolders) {
     const pluginFilePath = join(folderPath, "plugin.js");
     
     if (fs.existsSync(pluginFilePath)) {
       const events = require(pluginFilePath);
       for (const eventPair of events.events) {
+        console.log("registered", pluginFilePath);
         pluginEmitter.on(eventPair.eventName, (data) => {
           eventPair.callback(data);
         })
@@ -346,6 +363,11 @@ app.whenReady().then(() => {
   ipcMain.handle("libraryRetrieve:albumImageById", libraryRetrieveAlbumImageById);
   ipcMain.handle("libraryRetrieve:albumNameById", libraryRetrieveAlbumNameById);
   ipcMain.handle("libraryRetrieve:artistById", libraryRetrieveArtistById);
+  ipcMain.on("library:createNewPlaylist", libraryCreateNewPlaylist);
+  ipcMain.on("library:addSongToPlaylist", libraryAddSongToPlaylist);
+  ipcMain.handle("libraryRetrieve:allPlaylists", libraryRetrieveAllPlaylists)
+  ipcMain.handle("libraryRetrieve:allPlaylistsNamesAndIds", libraryRetrieveAllPlaylistsNamesAndIds);
+  ipcMain.handle("libraryRetrieve:playlistById", libraryRetrievePlaylistById);
   ipcMain.on("queue:updateQueueAndIndex", queueUpdateQueueAndIndex);
   ipcMain.on("queue:updateAddToQueue", queueUpdateAddToQueue);
   ipcMain.handle("queue:retrieveCurrent", queueRetrieveCurrent);

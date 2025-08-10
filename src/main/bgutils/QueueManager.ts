@@ -42,7 +42,7 @@ export class QueueManager {
       return [this.queueList[this.queueIndex], this.queueIndex];
     } catch (error) {
       console.log("The queue index is not synced with the queue -- someone wrote bad code");
-      return [this.dummySong, 0];
+      return [this.dummySong, -1];
     }
   }
   retrieveCurrentLRC(filePath:string):LRCData {

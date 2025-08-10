@@ -1,36 +1,26 @@
-import { useState } from "react";
-import { LuPlus } from "react-icons/lu";
-import * as Dialog from "@radix-ui/react-dialog";
-
+import { useEffect, useState } from "react";
+import PlaylistNewTile from "./PlaylistNewTile";
+import { Playlist } from "src/main/bgutils/songInformation";
+import PlaylistTile from "./PlaylistTile";
 const PlaylistCarousel = () => {
-  const [playlists, updatePlaylists] = useState([]);
+  const [playlists, updatePlaylists] = useState<Playlist[]>([]);
+  useEffect(() => {
+    window.electronAPI.libraryRetrieveAllPlaylists().then((response) => {
+      console.log(response)
+      updatePlaylists(response);
+    })
+  }, [])
   return (
     <div className="w-full p-4 rounded-xl bg-black bg-opacity-50 gap-y-2 flex flex-col">
-      <h1 className="text-5xl font-semibold">Playlists</h1>
-      <hr />
+      <div>
+        <h1 className="text-5xl font-semibold accent-color-text-hover-partial-underline inline-block">Playlists</h1>
+      </div>
       <div className="flex flex-row py-4 flex-wrap">
+        {playlists.map((playlist) => (<PlaylistTile playlist={playlist} />))}
         <div className="rounded-2xl p-4 flex flex-col ">
-          <div className="w-48 h-48 flex items-center justify-center">
-            <div className="p-4 transition-all rounded-full bg-black bg-opacity-50 hover:bg-opacity-80 cursor-pointer" title="New Playlist">
-              <Dialog.Root>
-                <Dialog.Trigger>
-                  <LuPlus className="text-4xl" />
-                </Dialog.Trigger>
-                <Dialog.Portal>
-                  <Dialog.Overlay className="plugins-dialog-overlay" />
-                  <Dialog.Content className="plugins-dialog-content">
-                    <div className="w-3xl h-xl rounded-2xl">
-
-                    </div>
-                  </Dialog.Content>
-                </Dialog.Portal>
-              </Dialog.Root>
-              
-            </div>
-            
-          </div>
-          <div className="w-48 pt-2 flex flex-col items-center justify-center">
-          </div>
+          <PlaylistNewTile />
+          {<div className="w-48 pt-2 flex flex-col items-center justify-center">
+          </div>}
         </div>
       </div>
     </div>

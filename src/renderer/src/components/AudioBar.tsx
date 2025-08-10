@@ -57,7 +57,10 @@ const AudioBar = () => {
 
 
   const [volume, updateVolume] = useState(0.8);
-
+  
+  const returnSongInformation = () => {
+    return songInformation;
+  }
   useEffect(() => {
     
 
@@ -81,18 +84,26 @@ const AudioBar = () => {
 
     window.electronAPI.queueNotifyAudioBar(async () => {
       const [newSong, queueIndex] = await window.electronAPI.queueRetrieveCurrent();
-      if (!newSong) { return; }
+      if (newSong === undefined) { return; }
       updateCurrentQueueIndex(queueIndex);
       updateAlbumName(newSong.albumName)
       updateSongInformation(newSong.song)
       updateCurrentImage(newSong.albumImage.dataUrl)
+      console.log("notified audio bar")
+      console.log(newSong);
+      console.log("wha");
       //console.log(newSong)
       //console.log("got notification")
 
       //updateProgressBar(0, true);
     });
     window.electronAPI.queueNotifyAudioBarQueue(async (newQueue: AudioBarSong[]) => {
-      if (!songInformation) {
+      const [currentSong, currentIndex] = await window.electronAPI.queueRetrieveCurrent();
+      // reference/timing issue seems like
+      console.log("notified audio bar queue")
+      
+      if (currentIndex == -1) {
+        console.log("notified audio bar queue 2");
         updateSongInformation(newQueue[0].song)
         updateCurrentQueueIndex(0);
         updateCurrentImage(newQueue[0].albumImage.dataUrl)
@@ -108,12 +119,13 @@ const AudioBar = () => {
     })
 
   }, [])
+  
   useEffect(() => {
     updateShowCurrentlyPlayingScreen(false);
   }, [location])
   useEffect(() => {
     if (songInformation && songInformation.hasLRC) {
-      window.electronAPI.queueRetrieveCurrentLRC(songInformation.filePath).then((newLRCData) => {
+      window.electronAPI.queueRetrieveCurrentLRC(songInformation.path).then((newLRCData) => {
         updateCurrentLyrics(newLRCData);
         console.log(newLRCData);
       }).catch((error) => { console.log("wow") });
@@ -161,12 +173,12 @@ const AudioBar = () => {
     }
     
     if (audioElement.current) {
-      const eventLogging = (event) => {console.log(`Event ran, ${event.type}`); console.log(event)};
+      /*const eventLogging = (event) => {console.log(`Event ran, ${event.type}`); console.log(event)};
       const eventList = ['loadedmetadata', 'error', 'loadstart', 'abort', 'canplay'];
       eventList.forEach((e) => {audioElement.current?.addEventListener(e, eventLogging)})
       return () => {
         eventList.forEach((e) => {audioElement.current?.removeEventListener(e, eventLogging)})
-      }
+      }*/
     } else {
       console.log("No audioElement.current");
     }
@@ -261,6 +273,7 @@ const AudioBar = () => {
     if (audioElement.current !== null) {
       if (audioElement.current.currentTime > 0.05 * audioElement.current.duration) {
         audioElement.current.currentTime = 0
+        updateProgressBar(0, true);
       }
       window.electronAPI.queueNotifySkipTracks(-1)
     }
@@ -349,7 +362,7 @@ const AudioBar = () => {
           </div>
           <span className={`p-2`}></span>
           {showCurrentlyPlayingScreen ?
-            <div className={`grow rounded-2xl min-w-0 bg-neutral-900  overflow-hidden flex basis-0 flex-col p-4`}>
+            <div className={`grow rounded-2xl min-w-0 bg-neutral-900 overflow-y-auto flex basis-0 flex-col p-4`}>
               <div className="flex flex-col grow">
                 <h1 className="font-semibold">Queue</h1>
                 <div className="mt-1 flex grow flex-col overflow-y-scroll">
@@ -401,7 +414,7 @@ const AudioBar = () => {
             }}
           ></div>
           <div className="flex basis-1/2 flex-col pl-4">
-            <h1 className="font-semibold tracking-tight line-clamp-1">{songInformation?.name}</h1>
+            <h1 onClick={() => {console.log(songInformation)}} className="font-semibold tracking-tight line-clamp-1">{songInformation?.name}</h1>
             <div className="flex flex-row flex-shrink gap-x-1">
               <h1 className="text-sm text-nowrap text-ellipsis flex-shrink items-center w-full line-clamp-1">
                 {songInformation?.artists.map((val, ind) => (
@@ -436,7 +449,7 @@ const AudioBar = () => {
               playTrack()
             }}
             autoPlay={true}
-            src={`${songInformation?.filePath}`}
+            src={songInformation?.filePath}
           >
           </audio>
           <div className="grow" />

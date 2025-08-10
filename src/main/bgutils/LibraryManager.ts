@@ -2,30 +2,48 @@ import * as fs from "fs"
 import { app } from "electron"
 import { join, extname, basename, format, parse } from "path"
 import { pathToFileURL } from "url"
-import { Song, Album, AudioBarSong, Artist } from "./songInformation"
+import { Song, Album, AudioBarSong, Artist, Playlist } from "./songInformation"
 import * as jsmediatags from "jsmediatags"
 import { TagType } from "jsmediatags/types"
 import { parseFile } from "music-metadata"
+
+const AppDataPaths = {
+  LibraryFolders: join(app.getPath("userData"),  "libraryPrefFolders.json"),
+  AlbumLibrary: join(app.getPath("userData"), "albumLibrary.json"),
+  PlaylistLibrary: join(app.getPath("userData"), "playlistLibrary.json")
+
+}
 export class LibraryManager {
+  
   folderPaths: string[]
   audioFileFormats: Set<string> = new Set<string>([".mp3", ".flac"])
   albumLibrary: Map<string, Album> = new Map<string, Album>()
-  appDataPaths: Map<string, string> = new Map([
-    ["libraryPrefFolders", join(app.getPath("userData"), "libraryPrefFolders.json")]
-  ])
+  playlistLibrary: Map<string, Playlist> = new Map<string, Playlist>();
+  /*appDataPaths: Map<string, string> = new Map([
+    ["libraryPrefFolders", join(app.getPath("userData"), "libraryPrefFolders.json")],
+    ["albumLibrary", join(app.getPath("userData"), "albumLibrary.json")],
+    ["playlistLibrary", join(app.getPath("userData"), "playlistLibrary.json")]
+  ])*/
   artistLibrary: Map<string, Artist> = new Map<string, Artist>()
   constructor() {
     this.folderPaths = []
   }
 
   startup(): void {
-    const libraryPrefFoldersPath =
-      this.appDataPaths.get("libraryPrefFolders") ?? "Check LibraryManager appDataPaths"
+    const libraryPrefFoldersPath = AppDataPaths.LibraryFolders; // this.appDataPaths.get("libraryPrefFolders") ?? "Check LibraryManager appDataPaths"
     fs.readFile(libraryPrefFoldersPath, (error, data: NonSharedBuffer) => {
       if (error === null) {
         this.folderPaths = JSON.parse(data.toString("utf8"))
       }
     })
+    fs.readFile(AppDataPaths.PlaylistLibrary, (error, data) => {
+      if (error === null) {
+        this.playlistLibrary = new Map(Object.entries(JSON.parse(data.toString("utf8"))));
+        console.log(typeof this.playlistLibrary);
+        console.log(this.playlistLibrary)
+      }
+    })
+    
   }
 
   folderListRetrieve(): string[] {
@@ -33,8 +51,7 @@ export class LibraryManager {
   }
   folderListUpdate(sourceList: string[]): void {
     this.folderPaths = sourceList
-    const libraryPrefFoldersPath =
-      this.appDataPaths.get("libraryPrefFolders") ?? "Check LibraryManager appDataPaths"
+    const libraryPrefFoldersPath = AppDataPaths.LibraryFolders; //this.appDataPaths.get("libraryPrefFolders") ?? "Check LibraryManager appDataPaths"
     fs.writeFile(libraryPrefFoldersPath, JSON.stringify(this.folderPaths), (error) => {
       if (error !== null) {
         console.log("Issues with writing to file @ " + libraryPrefFoldersPath)
@@ -140,12 +157,14 @@ export class LibraryManager {
           const lrcAttachmentExists = fs.existsSync(lrcPath);
           
           let processedArtists:string[] = sanitizedMultiSplit(usedDelimiters, defaultDelimiter, (metadata.common.artists ?? ["Unknown"]).join(", "))
+          console.log(filePath);
           const song = <Song>{
             name: metadata.common.title ?? basename(filePath, extname(filePath)),
             trackNo: metadata.common.track.no ?? 1,
             artists: processedArtists,
             albumRefId: albumName,
             filePath: pathToFileURL(filePath).href,
+            path: filePath,
             songId: "",
             duration: metadata.format.duration ?? 0,
             hasLRC: lrcAttachmentExists
@@ -240,5 +259,52 @@ export class LibraryManager {
   }
   libraryRetrieveArtistById(id:string):Artist | undefined {
     return this.artistLibrary.get(id)
+  }
+  libraryCreateNewPlaylist(name:string):void {
+    let playlistId = name.replaceAll("_", "__").replaceAll(" ", "_");
+    console.log(typeof playlistId);
+    console.log(typeof this.playlistLibrary);
+    while (this.playlistLibrary.has(playlistId) == true) {
+      playlistId += "0";
+    }
+    const playlist:Playlist = {
+      name: name,
+      albumImage: {
+        hasData: false,
+        dataUrl: ""
+      },
+      songs: [],
+      playlistId: playlistId
+    }
+    this.playlistLibrary.set(playlistId, playlist);
+    // persisted storage
+    this.librarySavePlaylists();
+  }
+  librarySavePlaylists():void {
+    const objectJSON = {};
+    for (const pair of this.playlistLibrary.entries()) {
+      objectJSON[pair[0]] = pair[1];
+      // assigning value to key
+    }
+    console.log(objectJSON)
+    fs.writeFileSync(AppDataPaths.PlaylistLibrary, JSON.stringify(objectJSON));
+    console.log(AppDataPaths.PlaylistLibrary);
+    console.log("saved updated playlists");
+  }
+  libraryRetrieveAllPlaylists():Playlist[] {
+    return this.playlistLibrary.values().toArray();
+  }
+  libraryAddSongToPlaylist(song:Song, playlistId:string):void {
+    this.playlistLibrary.get(playlistId)?.songs.push(song);
+    this.librarySavePlaylists();
+  }
+  libraryRetrieveAllPlaylistsNamesAndIds() {
+    return this.playlistLibrary.keys().map((key) => {return {
+      name: this.playlistLibrary.get(key)?.name ?? "Error",
+      key: key
+    }}).toArray();
+  }
+  libraryRetrievePlaylistById(id:string) {
+    return this.playlistLibrary.get(id);
   }
 }

@@ -29,7 +29,7 @@ const SyncedLyricDisplay = ({song}:{song:Song}) => {
   useEffect(() => {
     if (song !== undefined && song.hasLRC) {
       window.electronAPI
-        .queueRetrieveCurrentLRC(song.filePath)
+        .queueRetrieveCurrentLRC(song.path)
         .then((lrcData) => {
           updateCurrentLyrics(lrcData)
         })
