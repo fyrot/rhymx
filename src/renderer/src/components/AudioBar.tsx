@@ -47,7 +47,7 @@ const AudioBar = () => {
   const audioGain = useRef<GainNode | null>(null);
   const audioDynamicCompression = useRef<DynamicsCompressorNode | null>(null);
 
-  const progressBar = useRef<HTMLDivElement>(null)
+  const progressBar = useRef<HTMLInputElement>(null)
   const [currentTime, updateCurrentTime] = useState(0);
 
   const remSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
@@ -58,9 +58,6 @@ const AudioBar = () => {
 
   const [volume, updateVolume] = useState(0.8);
   
-  const returnSongInformation = () => {
-    return songInformation;
-  }
   useEffect(() => {
     
 
@@ -271,11 +268,14 @@ const AudioBar = () => {
   }
   const skipBack = () => {
     if (audioElement.current !== null) {
-      if (audioElement.current.currentTime > 0.05 * audioElement.current.duration) {
+      if ((audioElement.current.currentTime > 0.05 * audioElement.current.duration) || (audioElement.current.paused)) {
         audioElement.current.currentTime = 0
+        audioElement.current.play();
         updateProgressBar(0, true);
+      } else {
+        window.electronAPI.queueNotifySkipTracks(-1)
       }
-      window.electronAPI.queueNotifySkipTracks(-1)
+      
     }
   }
   const testSeek = () => {
@@ -389,7 +389,8 @@ const AudioBar = () => {
 
       {/* ^ this should be separated into its own component */}
       <div className="">
-        <div
+        <input
+          type="range"
           ref={progressBar}
           className={`h-[max(2px,0.125rem)] audio-bar-progress-bar-accent ease-linear`}
           style={{
@@ -397,7 +398,7 @@ const AudioBar = () => {
             transitionDuration: progressBarTransitionDuration,
             width: progressBarWidth
           }}
-        ></div>
+        ></input>
       </div>
       <div
         className={`audio-bar-container-background flex flex-col transition-all duration-[1000ms] ease-in-out ${songInformation === undefined ? "h-0 p-0" : "h-20 p-3"} overflow-hidden`}

@@ -18,6 +18,7 @@ export interface IElectronAPI {
     libraryRetrieveAlbumNameById: (id:string) => Promise<string>,
     libraryRetrieveArtistById: (id:string) => Promise<Artist | undefined>,
     libraryCreateNewPlaylist: (name:string) => void,
+    libraryNotifyNewPlaylist: (callback) => void,
     libraryAddSongToPlaylist: (song: Song, playlistId:string) => void,
     libraryRetrieveAllPlaylists: () => Promise<Playlist[]>,
     libraryRetrieveAllPlaylistsNamesAndIds: () => Promise<any>,

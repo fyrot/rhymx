@@ -42,7 +42,7 @@ export default function AlbumPage() {
     window.electronAPI.queueUpdateQueueAndIndex(audioBarQueue,playIndex);
     console.log(song)
   }
-
+  
   return (
     <div>
       <div>

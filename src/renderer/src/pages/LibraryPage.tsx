@@ -17,7 +17,7 @@ export default function LibraryPage() {
       <div className="min-h-screen bg-neutral-800 flex flex-col items-center justify-center">
         <NavigationBarSpacer accentGradient={false} />
         <div className="grow flex flex-col w-full items-center">
-          <div className="p-4 w-full">
+          <div className="p-4 pt-0 w-full">
             {/*<h1>this is where the entire library can be accessed</h1>*/}
             <AlbumsCarousel id="example" albumList={allAlbumsCarouselContent.sort((a,b) => a.name.localeCompare(b.name))} title={"All Albums"} />
       

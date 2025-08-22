@@ -142,6 +142,7 @@ async function libraryRetrieveArtistById(event, id):Promise<Artist | undefined> 
 }
 function libraryCreateNewPlaylist(event, name):void {
   libraryManager.libraryCreateNewPlaylist(name);
+  globalMainWindow.webContents.send("library:notifyNewPlaylist");
 }
 function libraryAddSongToPlaylist(event, song, playlistId) {
   libraryManager.libraryAddSongToPlaylist(song, playlistId);

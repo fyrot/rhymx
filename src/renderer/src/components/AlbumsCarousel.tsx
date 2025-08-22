@@ -25,7 +25,14 @@ const AlbumsCarousel = ( {albumList, title, id}: {albumList: Album[], title: str
     
   }, [])
   return (
-    <div className="flex flex-col w-full">
+    <div className="w-full p-4 rounded-xl bg-black bg-opacity-50 gap-y-2 flex flex-col">
+      <div>
+        <h1 className="text-5xl font-semibold accent-color-text-hover-partial-underline inline-block">All Albums</h1>
+      </div>
+      <div className="flex flex-row py-4 flex-wrap">
+        {albumList.map((album) => (<AlbumTile key={album.albumId} album={album} />))}
+      </div>
+      {/*<div className="flex flex-col w-full">
       <div className="flex flex-row">
         
         <h1 className="font-semibold ml-2 text-5xl">{title}</h1>
@@ -45,8 +52,10 @@ const AlbumsCarousel = ( {albumList, title, id}: {albumList: Album[], title: str
         ))}
         </>
       </div>
-    </div>
+    </div>*/}
 
+    </div>
+    
   )
 }
 export default AlbumsCarousel

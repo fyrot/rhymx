@@ -9,18 +9,18 @@ const PlaylistTile = ({ playlist }: { playlist: Playlist }) => {
   return (
     <div
       onClick={navigateToPlaylist}
-      className="flex-col group inline-flex p-4 bg-transparent transition-all duration-300 hover:bg-black hover:bg-opacity-30 rounded-2xl album-tile-fill-animation"
+      className="flex-col group inline-flex p-4 bg-transparent transition-all duration-300 rounded-2xl album-tile-fill-animation"
     >
       {playlist.albumImage.hasData ? (
         <div
-          className="w-48 h-48 rounded-xl"
+          className="w-48 h-48 rounded-xl transition-all group-hover:w-52 group-hover:h-52"
           style={{
             backgroundImage: `url(${playlist.albumImage.dataUrl})`,
             backgroundSize: "cover"
           }}
         />
       ) : (
-        <div className="w-48 h-48 rounded-xl bg-neutral-950 flex items-center justify-center">
+        <div className="w-48 h-48 rounded-xl transition-all group-hover:w-52 group-hover:h-52 bg-neutral-950 ring-2 ring-white flex items-center justify-center">
           <h1>{playlist.name.split(" ").map((word) => (word.at(0) ?? "")).join("")}</h1>
         </div>
       )}

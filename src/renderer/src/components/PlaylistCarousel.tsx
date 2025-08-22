@@ -9,6 +9,14 @@ const PlaylistCarousel = () => {
       console.log(response)
       updatePlaylists(response);
     })
+    window.electronAPI.libraryNotifyNewPlaylist(() => {
+      console.log("notification received");
+      window.electronAPI.libraryRetrieveAllPlaylists().then((response) => {
+        console.log(response);
+        console.log("notification received + updated");
+        updatePlaylists(response);
+      })
+    })
   }, [])
   return (
     <div className="w-full p-4 rounded-xl bg-black bg-opacity-50 gap-y-2 flex flex-col">
