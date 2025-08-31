@@ -1,8 +1,10 @@
 import { AudioBarSong, Song } from "src/main/bgutils/songInformation"
+import { QueueIdentifier } from "@renderer/QueueIdentifier"
 import { LuChevronLeft, LuEllipsisVertical, LuPlay } from "react-icons/lu"
 import { toast } from "sonner";
 import { queueToast } from "@renderer/helper/QueueToast";
 import * as ContextMenu from "@radix-ui/react-context-menu";
+
 import { useState } from "react";
 function timeToMMSS(seconds: number):string {
   const mm = Math.floor(seconds/60);
@@ -46,7 +48,8 @@ const AlbumSongTile = ({ song, trackNo, playFunction}: { song: Song; trackNo: nu
       window.electronAPI.queueUpdateAddToQueue({
         song: song,
         albumImage: album.albumImage,
-        albumName: album.name
+        albumName: album.name,
+        identifier: QueueIdentifier.generateIdentifier()
       })
       queueToast({title: song.name, description: "added to queue", background: "#121212"})
       //toast(`${song.name} added to queue.`);

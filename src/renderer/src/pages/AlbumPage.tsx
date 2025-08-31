@@ -3,6 +3,7 @@ import NavigationBarSpacer from "@renderer/components/NavigationBarSpacer"
 import { useEffect, useState, useLayoutEffect } from "react"
 import { LuDisc } from "react-icons/lu"
 import { useParams, useSearchParams } from "react-router"
+import { QueueIdentifier } from "@renderer/QueueIdentifier"
 import { Album, Song, AudioBarSong } from "src/main/bgutils/songInformation"
 export default function AlbumPage() {
   const [abc, setAbc] = useSearchParams()
@@ -34,7 +35,8 @@ export default function AlbumPage() {
         audioBarQueue.push({
           song: item,
           albumImage: album.albumImage,
-          albumName: album.name 
+          albumName: album.name,
+          identifier: QueueIdentifier.generateIdentifier()
         })
         index++;
       })

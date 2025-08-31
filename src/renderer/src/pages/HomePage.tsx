@@ -21,6 +21,8 @@ export default function HomePage() {
           <LuSettings className="text-xl" />
           <h1>Manage Preferences</h1>
         </div>
+        <br /> 
+        <br />
       </div>
     </div>
   )

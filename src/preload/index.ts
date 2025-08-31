@@ -38,6 +38,8 @@ if (process.contextIsolated) {
       queueRetrieveCurrent: () => {return ipcRenderer.invoke("queue:retrieveCurrent");},
       queueRetrieveCurrentLRC: (filePath:string) => {return ipcRenderer.invoke("queue:retrieveCurrentLRC", filePath)},
       queueNotifyAudioBar: (callback) => {ipcRenderer.on("queue:notifyAudioBar", (_event) => {callback()});},
+      queueUpdateLoop: (newLoop: boolean) => {ipcRenderer.send("queue:updateLoop", newLoop);},
+      queueUpdateShuffle: (newShuffle: boolean, currentIndex: number) => {return ipcRenderer.invoke("queue:updateShuffle", newShuffle, currentIndex);},
       currentlyPlayingUpdateVisibility: (visibility: boolean) => {ipcRenderer.send("currentlyPlaying:updateVisibility", visibility)},
       currentlyPlayingReceiveVisibility: (callback) => {ipcRenderer.on("currentlyPlaying:receiveVisibility", (_event, visibility) => {callback(visibility)})},
       queueNotifyTrackEnded: () => {ipcRenderer.send("queue:notifyTrackEnded");},

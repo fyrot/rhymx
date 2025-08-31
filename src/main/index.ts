@@ -81,6 +81,13 @@ function queueNotifyTrackEnded(event) {
   queueManager.trackEnded();
   queueNotifyAudioBar();
 }
+function queueUpdateLoop(event, newLoop) {
+  queueManager.loopQueue(newLoop);
+}
+async function queueUpdateShuffle(event, newShuffle, currentIndex):Promise<[AudioBarSong[], number]> {
+  const newIndex = queueManager.shuffleQueue(newShuffle, currentIndex);
+  return [queueManager.retrieveQueue(), newIndex];
+}
 function currentlyPlayingUpdateVisibility(event, visibility: boolean):void {
   console.log("received update visibility");
   globalMainWindow.webContents.send("currentlyPlaying:receiveVisibility", visibility);
@@ -376,6 +383,8 @@ app.whenReady().then(() => {
   ipcMain.handle("queue:retrieveQueue", queueRetrieveQueue);
   ipcMain.on("queue:notifyTrackEnded", queueNotifyTrackEnded);
   ipcMain.on("queue:notifySkipTracks", queueNotifySkipTracks);
+  ipcMain.on("queue:updateLoop", queueUpdateLoop);
+  ipcMain.handle("queue:updateShuffle", queueUpdateShuffle);
   ipcMain.on("currentlyPlaying:updateVisibility", currentlyPlayingUpdateVisibility);
   ipcMain.on("plugins:addSources", pluginsAddSources);
   ipcMain.handle("plugins:retrieveSources", pluginsRetrieveSources);

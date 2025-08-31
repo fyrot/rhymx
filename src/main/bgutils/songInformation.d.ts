@@ -39,5 +39,6 @@ export interface AudioBarSong {
     hasData: boolean,
     dataUrl: string
   }
-  albumName: string
+  albumName: string,
+  identifier: string
 }

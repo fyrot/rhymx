@@ -31,6 +31,8 @@ export interface IElectronAPI {
     queueNotifyAudioBarQueue: (callback) => void,
     queueNotifyTrackEnded: () => void,
     queueNotifySkipTracks: (tracksSkipped:number) => void,
+    queueUpdateLoop: (newLoop: boolean) => void,
+    queueUpdateShuffle: (newShuffle: boolean, currentIndex: number) => Promise<[AudioBarSong[], number]>,
     currentlyPlayingUpdateVisibility: (visibility:boolean) => void,
     currentlyPlayingReceiveVisibility: (callback) => void,
     pluginsNotifyUpdate: (callback) => void,

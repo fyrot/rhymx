@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState, lazy } from "react"
+import { useEffect, useRef, useState, lazy, ChangeEvent } from "react"
 import {
   LuPause,
   LuPlay,
+  LuRepeat,
+  LuShuffle,
   LuSkipBack,
   LuSkipForward,
   LuStretchHorizontal
@@ -10,6 +12,7 @@ import { useLocation, useNavigate } from "react-router"
 import { AudioBarSong, Song } from "src/main/bgutils/songInformation"
 import { LRCData } from "src/main/bgutils/LRCParserUtils"
 import NavigationBarSpacer from "./NavigationBarSpacer"
+import {Reorder} from "motion/react";
 import { FixedSizeList as ReactWindowList } from "react-window"
 import AutoSizer from "react-virtualized-auto-sizer"
 const AudioBarQueueTile = lazy(() => import("./AudioBarQueueTile"))
@@ -27,7 +30,7 @@ const AudioBar = () => {
   const [songInformation, updateSongInformation] = useState<Song>()
 
   const [currentQueueIndex, updateCurrentQueueIndex] = useState<number>(0);
-  const [currentQueue, updateCurrentQueue] = useState<AudioBarSong[]>();
+  const [currentQueue, updateCurrentQueue] = useState<AudioBarSong[]>([]);
   const [currentImage, updateCurrentImage] = useState<string>("")
   const [currentLyrics, updateCurrentLyrics] = useState<LRCData>();
 
@@ -41,13 +44,15 @@ const AudioBar = () => {
   const [progressBarTransitionDuration, updateProgressBarTransitionDuration] =
     useState<string>("10s")
   const [showCurrentlyPlayingScreen, updateShowCurrentlyPlayingScreen] = useState<boolean>(false)
+  const [loopFlag, updateLoopFlag] = useState<boolean>(false);
+  const [shuffleFlag, updateShuffleFlag] = useState<boolean>(false);
 
   const audioElement = useRef<HTMLAudioElement | null>(null)
   const audioContext = useRef<AudioContext | null>(null);
   const audioGain = useRef<GainNode | null>(null);
   const audioDynamicCompression = useRef<DynamicsCompressorNode | null>(null);
 
-  const progressBar = useRef<HTMLInputElement>(null)
+  const progressBar = useRef<HTMLDivElement>(null)
   const [currentTime, updateCurrentTime] = useState(0);
 
   const remSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
@@ -259,10 +264,18 @@ const AudioBar = () => {
     } catch (e) {
       console.log(e);
     }
-      
-
-    
   }
+
+  const seekEnded = (event:ChangeEvent) => {
+    const slider = event.target as HTMLInputElement;
+    if (audioElement.current && songInformation) {
+      const sliderValue = slider.valueAsNumber;
+      const newPosition =  sliderValue * audioElement.current.duration;
+      audioElement.current.currentTime = newPosition;
+      updateProgressBar(newPosition, true);
+    }    
+  }
+
   const trackEnded = () => {
     window.electronAPI.queueNotifyTrackEnded()
   }
@@ -278,6 +291,14 @@ const AudioBar = () => {
       
     }
   }
+
+  const reorderQueue = (newOrder: AudioBarSong[]) => {
+    let playing = currentQueue[currentQueueIndex];
+    let newIndex = newOrder.indexOf(playing);
+    updateCurrentQueue(newOrder);
+    window.electronAPI.queueUpdateQueueAndIndex(newOrder, newIndex > -1 ? newIndex : 0);
+  }
+
   const testSeek = () => {
     console.log("woah")
   }
@@ -315,6 +336,24 @@ const AudioBar = () => {
     }
   }
 
+  const updateLoop = () => {
+    const newLoop = !loopFlag;
+    updateLoopFlag(newLoop);
+    console.log(loopFlag);
+  }
+  const updateShuffle = () => {
+    const newShuffle = !shuffleFlag;
+    updateShuffleFlag(newShuffle);
+
+    window.electronAPI.queueUpdateShuffle(newShuffle, currentQueueIndex).then((val) => {
+      const newQueue = val[0];
+      const newIndex = val[1];
+      updateCurrentQueue(newQueue);
+      updateCurrentQueueIndex(newIndex);
+    })
+    console.log(shuffleFlag);
+  }
+
   const QueueRow = ({ index, style }) => {
     if (currentQueue !== undefined && currentQueue[index]) {
       const song = currentQueue[index];
@@ -332,11 +371,11 @@ const AudioBar = () => {
     <div className={`audio-bar-container flex  flex-col p-0`}>
       {/* gpu usage bottom 6 left 0 went crazy down using position absolute instead of fixed lol */}
 
-      <div className={`transition-all flex bg-neutral-800 flex-col  ${showCurrentlyPlayingScreen ? "h-[calc(100vh-5rem-max(2px,.125rem))]" : "h-0"}`}>
+      <div className={`transition-all flex bg-neutral-800 flex-col ${showCurrentlyPlayingScreen ? "h-[calc(100vh-5rem-max(2px,.125rem))]" : "h-0"}`}>
         <NavigationBarSpacer accentGradient={false} />
         <div className="grow overflow-hidden flex-shrink flex px-4 pb-3 pt-0 flex-row">
           <div className={`grow-[2] basis-0 overflow-hidden flex min-w-0 rounded-2xl`} style={{ background: `url(${currentImage})`, backgroundSize: "100% 100%", backgroundPosition: "center", backgroundAttachment: "fixed", backgroundRepeat: "space" }}>
-            <div ref={lyricDisplayContainer} className={`grow  rounded-2xl p-2 flex flex-col audio-bar-currently-playing-image-blur items-center overflow-y-auto ${!songInformation?.hasLRC ? "justify-center" : ""}`}>
+            <div ref={lyricDisplayContainer} className={`grow  rounded-2xl p-2 flex flex-col audio-bar-currently-playing-image-blur items-center overflow-y-auto no-scrollbar ${!songInformation?.hasLRC ? "justify-center" : ""}`}>
               <br />
               {!songInformation?.hasLRC ? <div
                 className={`w-[min(40vw,40vh,24rem)] h-[min(40vw,40vh,24rem)]  flex-shrink-0 rounded-xl shadow-2xl drop-shadow-2xl`}
@@ -361,11 +400,21 @@ const AudioBar = () => {
 
           </div>
           <span className={`p-2`}></span>
-          {showCurrentlyPlayingScreen ?
-            <div className={`grow rounded-2xl min-w-0 bg-neutral-900 overflow-y-auto flex basis-0 flex-col p-4`}>
+          {showCurrentlyPlayingScreen || true ?
+            <div className={`grow rounded-2xl min-w-0 bg-neutral-900 overflow-y-auto no-scrollbar flex basis-0 flex-col p-4 transition-all ${showCurrentlyPlayingScreen ? "opacity-100" : "opacity-0"}`}>
               <div className="flex flex-col grow">
-                <h1 className="font-semibold">Queue</h1>
+                <div className="flex flex-row gap-x-2">
+                  <span className="font-semibold p-2">Queue</span>
+                  <div className="grow" />
+                  <div className="p-3 rounded-full bg-black bg-opacity-0 transition-all hover:bg-opacity-50" onClick={updateLoop}>
+                    <span className={`text-white  transition-all ${loopFlag ? "opacity-100" : "opacity-50" }`} ><LuRepeat /></span>
+                  </div>
+                  <div className="p-3 rounded-full bg-black bg-opacity-0 transition-all hover:bg-opacity-50" onClick={updateShuffle}>
+                    <span className={`text-white transition-all ${shuffleFlag ? "opacity-100" : "opacity-50" }`}> <LuShuffle /></span>
+                  </div>
+                </div>
                 <div className="mt-1 flex grow flex-col overflow-y-scroll">
+                  
                   { currentQueue?.map((absong, index) => (<><AudioBarQueueTile song={absong} index={index} highlight={currentQueueIndex == index} /><hr className="opacity-25" /></>))
                   }
                   {/*<AutoSizer>
@@ -388,17 +437,18 @@ const AudioBar = () => {
       </div>
 
       {/* ^ this should be separated into its own component */}
-      <div className="">
-        <input
-          type="range"
+      <div className={`group h-[max(2px,0.125rem)] flex flex-row items-center min-w-screen ${songInformation ? "" : "hidden"}`}>
+        <div
           ref={progressBar}
-          className={`h-[max(2px,0.125rem)] audio-bar-progress-bar-accent ease-linear`}
+          className={`h-[max(2px,0.125rem)] audio-bar-progress-bar-accent ease-linear flex`}
           style={{
             transitionProperty: "width",
             transitionDuration: progressBarTransitionDuration,
             width: progressBarWidth
           }}
-        ></input>
+        ></div>
+        <div className="h-4 w-4 opacity-0 relative right-2 transition-all delay-[50ms] group-hover:opacity-100 rounded-full audio-bar-progress-bar-accent" />
+        <input type="range" onChange={seekEnded} min={0} max={1} step={"any"} className="opacity-0 absolute w-screen cursor-pointer" /> 
       </div>
       <div
         className={`audio-bar-container-background flex flex-col transition-all duration-[1000ms] ease-in-out ${songInformation === undefined ? "h-0 p-0" : "h-20 p-3"} overflow-hidden`}
