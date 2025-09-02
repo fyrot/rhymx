@@ -2,7 +2,7 @@ import * as fs from "fs"
 import { app } from "electron"
 import { join, extname, basename, format, parse } from "path"
 import { pathToFileURL } from "url"
-import { Song, Album, AudioBarSong, Artist, Playlist } from "./songInformation"
+import { Song, Album, AudioBarSong, Artist, Playlist, Discs } from "./songInformation"
 import * as jsmediatags from "jsmediatags"
 import { TagType } from "jsmediatags/types"
 import { parseFile } from "music-metadata"
@@ -33,7 +33,15 @@ export class LibraryManager {
     const libraryPrefFoldersPath = AppDataPaths.LibraryFolders; // this.appDataPaths.get("libraryPrefFolders") ?? "Check LibraryManager appDataPaths"
     fs.readFile(libraryPrefFoldersPath, (error, data: NonSharedBuffer) => {
       if (error === null) {
-        this.folderPaths = JSON.parse(data.toString("utf8"))
+        this.folderPaths = JSON.parse(data.toString("utf8"));
+        this.sanitizeFolderPaths();
+      }
+    })
+    fs.readFile(AppDataPaths.AlbumLibrary, (error, data) => {
+      if (error === null) {
+        console.log("WOAH");
+        this.albumLibrary = new Map(Object.entries(JSON.parse(data.toString("utf8"))));
+        this.sanitizeAlbumLibrary();
       }
     })
     fs.readFile(AppDataPaths.PlaylistLibrary, (error, data) => {
@@ -41,11 +49,60 @@ export class LibraryManager {
         this.playlistLibrary = new Map(Object.entries(JSON.parse(data.toString("utf8"))));
         console.log(typeof this.playlistLibrary);
         console.log(this.playlistLibrary)
+        this.sanitizePlaylistLibrary();
       }
     })
     
+    
   }
+  sanitizeFolderPaths(): void {
+    console.log("sanitized folder paths");
+    this.folderPaths = this.folderPaths.filter((folderPath) => {return fs.existsSync(folderPath);});
+  }
+  sanitizePlaylistLibrary(): void {
+    console.log("sanitized playlist library");
+    this.playlistLibrary.forEach((playlist) => {
+      playlist.songs = playlist.songs.filter((song) => {
+        if (song.filePath.startsWith("file:///")) {
+          return fs.existsSync(song.filePath.slice("file:///".length)) && Object.hasOwn(this.albumLibrary, song.albumRefId);
+        } else {return true;}
+      });
+    })
+    this.playlistLibrary.forEach((playlist, key) => {
+      if (playlist.songs.length == 0) {
+        this.playlistLibrary.delete(key);
+      }
+    })
+  }
+  sanitizeAlbumLibrary(): void {
+    console.log("sanitized album library");
+    this.albumLibrary.forEach((album, key) => {
+      Object.entries(album.discs).forEach((keyValue) => {
+        const disc = keyValue[0];
+        const songs = keyValue[1];
+        console.log(album.discs[disc].length);
+        songs.forEach((song) => {console.log(song.filePath.slice("file:///".length));})
+        album.discs[disc] = songs.filter((song) => {return fs.existsSync(song.filePath.slice("file:///".length));}) 
+        console.log(album.discs[disc].length);
+        if (album.discs[disc].length == 0) {
+          delete album.discs[disc];
+          console.log("disc deleted");
+        }
+      })
+      /*album.discs.forEach((songs, disc) => {
+        album.discs.set(disc, songs.filter((song) => {fs.existsSync(song.filePath)}));
+        if (album.discs.get(disc)?.length == 0) {
+          album.discs.delete(disc);
+        }
+      })*/
+    })
 
+    this.albumLibrary.forEach((album, key) => {
+      if (Object.keys(album.discs).length == 0) {
+        this.albumLibrary.delete(key);
+      }
+    })
+  }
   folderListRetrieve(): string[] {
     return this.folderPaths
   }
@@ -127,7 +184,7 @@ export class LibraryManager {
             const newAlbum = <Album>{
               name: albumName,
               artists: [],
-              discs: new Map<string, Song[]>(),
+              discs: <Discs>{},
               albumImage: {
                 hasData: false,
                 dataUrl: ""
@@ -148,8 +205,8 @@ export class LibraryManager {
           }
           const discNumber = metadata.common.disk.no ?? 1
           const discNumberString = discNumber.toString();
-          if (!currentAlbum.discs.has(discNumberString)) {
-            currentAlbum.discs.set(discNumberString, []);
+          if (!Object.hasOwn(currentAlbum.discs, discNumberString)) {
+            currentAlbum.discs[discNumberString] = [];
           }
           const parsedPath = parse(filePath);
           const lrcPath = join(parsedPath.dir, parsedPath.name) + ".lrc";
@@ -169,7 +226,8 @@ export class LibraryManager {
             duration: metadata.format.duration ?? 0,
             hasLRC: lrcAttachmentExists
           }
-          currentAlbum.discs.get(discNumberString)?.push(song);
+
+          currentAlbum.discs[discNumberString].push(song);
           // trying porting the later stuff and see what happens
           resolve();
         }).catch((error) => {console.log(error);reject();});
@@ -191,10 +249,10 @@ export class LibraryManager {
       albumList[i].albumId = newId
 
       if (true) {
-        const keys = albumList[i].discs.keys().toArray();
+        const keys = Object.keys(albumList[i].discs);
         for (const key of keys) {
           // using the ! here to disable undefined guard, since these keys have to be in the di
-          albumList[i].discs.get(key)!.sort((a, b) => {
+          albumList[i].discs[key].sort((a, b) => {
             if (a.trackNo != b.trackNo) {
               return a.trackNo - b.trackNo; 
             } else {
@@ -211,7 +269,7 @@ export class LibraryManager {
       if (true) {
         for (const album of albumList) {
           let artistSet: Set<string> = new Set<string>();
-          const allAlbumDiscs = [...album.discs.values()];
+          const allAlbumDiscs = [...Object.values(album.discs)];
           for (const disc of allAlbumDiscs) {
             // write this better later
             disc.forEach((song:Song) => {
@@ -236,6 +294,7 @@ export class LibraryManager {
 
       this.albumLibrary.set(newId, albumList[i])
     }
+    this.librarySaveAlbums();
     temporaryArtistLibrary.forEach((set, key) => {
       this.artistLibrary.set(key, <Artist>{
         artistId: key,
@@ -243,6 +302,7 @@ export class LibraryManager {
         discography: set.values().toArray()
       })
     })
+
     console.log(temporaryArtistLibrary);
   }
   libraryRetrieveAllAlbums(): Album[] {
@@ -280,9 +340,18 @@ export class LibraryManager {
     // persisted storage
     this.librarySavePlaylists();
   }
+  librarySaveAlbums(): void {
+    const objectJSON = {};
+    for (const pair of this.albumLibrary.entries()) {
+      
+      objectJSON[pair[0]] = pair[1];
+    }
+    fs.writeFileSync(AppDataPaths.AlbumLibrary, JSON.stringify(objectJSON));
+    console.log("saved albums");
+  }
   librarySavePlaylists():void {
     const objectJSON = {};
-    for (const pair of this.playlistLibrary.entries()) {
+    for (const pair of this.albumLibrary.entries()) {
       objectJSON[pair[0]] = pair[1];
       // assigning value to key
     }

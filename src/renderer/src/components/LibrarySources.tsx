@@ -72,7 +72,7 @@ const LibrarySources = () => {
           </div>
           <div onClick={() => {window.electronAPI.libraryPrefSourceIndex();}} className="border-white bg-transparent hover:bg-neutral-900 border-2 px-4 py-2 transition-all duration-300 ease-out items-center rounded-full flex-row inline-flex opacity-50 hover:opacity-100">
             <LuMicrochip className="text-2xl" />
-            <h1 className="pl-2 text-sm">Test Index</h1>
+            <h1 className="pl-2 text-sm">Save Sources</h1>
           </div>
         </div>
       </div>

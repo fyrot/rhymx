@@ -20,7 +20,7 @@ const PlaylistTile = ({ playlist }: { playlist: Playlist }) => {
           }}
         />
       ) : (
-        <div className="w-48 h-48 rounded-xl transition-all group-hover:w-52 group-hover:h-52 bg-neutral-950 ring-2 ring-white flex items-center justify-center">
+        <div className="w-48 h-48 rounded-xl transition-all group-hover:w-52 group-hover:h-52 bg-black flex items-center justify-center">
           <h1>{playlist.name.split(" ").map((word) => (word.at(0) ?? "")).join("")}</h1>
         </div>
       )}

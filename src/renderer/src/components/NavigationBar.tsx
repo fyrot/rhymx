@@ -14,7 +14,7 @@ const NavigationBar = () => {
   const mainNavigationLinks:MainNavigation[] = [
     {name: "Home", icon: <LuHouse  />, href: "/"},
     {name: "Library", icon: <LuLibrary />, href: "/library"},
-    {name: "Search", icon: <LuSearch />, href: "/search"},
+    //{name: "Search", icon: <LuSearch />, href: "/search"},
 
     //{name: "Preferences", icon: <LuSettings  />, href: "/preferences"},
     
@@ -53,7 +53,7 @@ const NavigationBar = () => {
         <div onClick={() => {setMenuOpen(!menuOpen);}} className="w-12 flex items-center py-2 navigation-bar-icon-bg rounded-full none-draggable-appbar justify-center grow ">
             <LuMenu  className={`text-xl grow none-draggable-appbar navigation-bar-icon navigation-bar-menu-icon ${menuOpen ? "navigation-bar-menu-icon-opened" : ""} `} />
         </div>
-        <div className={`${menuOpen ? "w-36" : "w-0"} overflow-hidden transition-all duration-300 flex flex-row ease-out`}>
+        <div className={`${menuOpen ? "w-24" : "w-0"} overflow-hidden transition-all duration-300 flex flex-row ease-out`}>
             
             <>
             {mainNavigationLinks.map((link) => (

@@ -70,6 +70,7 @@ export class QueueManager {
     const oldIndex = this.queueIndex;
     this.goToNextTrack();
     if (this.queueIndex == oldIndex && this.loopFlag) {
+      console.log("looped");
       this.queueIndex = 0;
     }
   }

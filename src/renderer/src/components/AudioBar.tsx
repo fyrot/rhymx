@@ -340,6 +340,7 @@ const AudioBar = () => {
     const newLoop = !loopFlag;
     updateLoopFlag(newLoop);
     console.log(loopFlag);
+    window.electronAPI.queueUpdateLoop(newLoop);
   }
   const updateShuffle = () => {
     const newShuffle = !shuffleFlag;

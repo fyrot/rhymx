@@ -17,6 +17,7 @@ const PlaylistCarousel = () => {
         updatePlaylists(response);
       })
     })
+    console.log("playlist carousel updates ran")
   }, [])
   return (
     <div className="w-full p-4 rounded-xl bg-black bg-opacity-50 gap-y-2 flex flex-col">
@@ -25,7 +26,7 @@ const PlaylistCarousel = () => {
       </div>
       <div className="flex flex-row py-4 flex-wrap">
         {playlists.map((playlist) => (<PlaylistTile playlist={playlist} />))}
-        <div className="rounded-2xl p-4 flex flex-col ">
+        <div className="rounded-2xl p-4 flex flex-col album-tile-fill-animation ">
           <PlaylistNewTile />
           {<div className="w-48 pt-2 flex flex-col items-center justify-center">
           </div>}

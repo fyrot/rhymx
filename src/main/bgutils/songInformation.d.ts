@@ -9,10 +9,13 @@ export interface Song {
   duration: number,
   hasLRC: boolean
 }
+export interface Discs {
+  [key: string]: Song[];
+}
 export interface Album {
   name: string,
   artists: string[],
-  discs: Map<string, Song[]>,
+  discs: Discs,
   albumImage: {
     hasData: boolean,
     dataUrl: string

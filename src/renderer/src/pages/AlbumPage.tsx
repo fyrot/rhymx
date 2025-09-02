@@ -4,7 +4,7 @@ import { useEffect, useState, useLayoutEffect } from "react"
 import { LuDisc } from "react-icons/lu"
 import { useParams, useSearchParams } from "react-router"
 import { QueueIdentifier } from "@renderer/QueueIdentifier"
-import { Album, Song, AudioBarSong } from "src/main/bgutils/songInformation"
+import { Album, Song, AudioBarSong, Discs } from "src/main/bgutils/songInformation"
 export default function AlbumPage() {
   const [abc, setAbc] = useSearchParams()
   const [album, updateAlbum] = useState<Album>()
@@ -27,7 +27,22 @@ export default function AlbumPage() {
     const audioBarQueue:AudioBarSong[] = [];
     let index = 0;
     let playIndex = 0;
-    album?.discs.entries().forEach((pair) => {
+    Object.entries(album!.discs).forEach((pair) => {
+      pair[1].forEach((item) => {
+        if (item.filePath == song.filePath) {
+          playIndex = index;
+        }
+        audioBarQueue.push({
+          song: item,
+          albumImage: album!.albumImage,
+          albumName: album!.name,
+          identifier: QueueIdentifier.generateIdentifier()
+
+        })
+        index++;
+      })
+    })
+    /*album?.discs.entries().forEach((pair) => {
       pair[1].forEach((item) => {
         if (item.filePath == song.filePath) {
           playIndex = index;
@@ -40,7 +55,7 @@ export default function AlbumPage() {
         })
         index++;
       })
-    });
+    });*/
     window.electronAPI.queueUpdateQueueAndIndex(audioBarQueue,playIndex);
     console.log(song)
   }
@@ -125,20 +140,19 @@ export default function AlbumPage() {
           </div>
 
           <div className="px-12 flex flex-col gap-y-2 mt-4">
-            {album?.discs.size == 1 ? (
-              album.discs
-                .values()
-                .toArray()[0]
+            
+            { album !== undefined && Object.entries(album!.discs).length == 1 ? (
+              album!.discs[Object.keys(album!.discs)[0]]
                 .map((song, index) => <AlbumSongTile key={index} song={song} trackNo={index + 1} playFunction={() => {playAlbum(song);}} />)
             ) : <></>
             } 
-            {(album?.discs.size ?? 0) >= 2 ? album?.discs.entries().toArray().sort((a, b) => a[0].localeCompare(b[0])).map((value) => 
+            {album !== undefined && (Object.entries(album!.discs).length ?? 0) >= 2 ? Object.entries(album!.discs).sort((a, b) => a[0].localeCompare(b[0])).map((value) => 
                 <>
                 
                 <div className="flex items-center p-2 flex-row gap-x-2"><LuDisc /><span>{value[0]}</span> <hr className="grow" /> </div>
                 {value[1].map((song, index) => <AlbumSongTile key={index} song={song} trackNo={index+1} playFunction={() => {playAlbum(song);}} />)}
                 </>
-            ) : <></>}  
+            ) : <></>} 
           </div>
           <br />
           
