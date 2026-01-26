@@ -34,7 +34,7 @@ export class QueueManager {
     this.queueIndex = queueIndex ?? (this.queueList.length > 0 ? 0 : -1);
   }
   updateQueue(newQueue:AudioBarSong[]):void {
-    this.queueList = newQueue;
+    this.queueList = [...newQueue];
     console.log("edited original queue");
     this.originalQueue = newQueue;
     this.queueIndex = 0;

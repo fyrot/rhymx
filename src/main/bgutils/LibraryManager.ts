@@ -2,23 +2,31 @@ import * as fs from "fs"
 import { app } from "electron"
 import { join, extname, basename, format, parse } from "path"
 import { pathToFileURL } from "url"
-import { Song, Album, AudioBarSong, Artist, Playlist, Discs } from "./songInformation"
+import {
+  Song,
+  Album,
+  AudioBarSong,
+  Artist,
+  Playlist,
+  Discs,
+  ResImageCollection
+} from "./songInformation"
 import * as jsmediatags from "jsmediatags"
 import { TagType } from "jsmediatags/types"
 import { parseFile } from "music-metadata"
+import sharp from "sharp"
 
 const AppDataPaths = {
-  LibraryFolders: join(app.getPath("userData"),  "libraryPrefFolders.json"),
+  LibraryFolders: join(app.getPath("userData"), "libraryPrefFolders.json"),
   AlbumLibrary: join(app.getPath("userData"), "albumLibrary.json"),
   PlaylistLibrary: join(app.getPath("userData"), "playlistLibrary.json")
-
 }
 export class LibraryManager {
-  
   folderPaths: string[]
   audioFileFormats: Set<string> = new Set<string>([".mp3", ".flac"])
   albumLibrary: Map<string, Album> = new Map<string, Album>()
-  playlistLibrary: Map<string, Playlist> = new Map<string, Playlist>();
+  playlistLibrary: Map<string, Playlist> = new Map<string, Playlist>()
+  imageCollection: Map<string, ResImageCollection> = new Map<string, ResImageCollection>()
   /*appDataPaths: Map<string, string> = new Map([
     ["libraryPrefFolders", join(app.getPath("userData"), "libraryPrefFolders.json")],
     ["albumLibrary", join(app.getPath("userData"), "albumLibrary.json")],
@@ -30,85 +38,86 @@ export class LibraryManager {
   }
 
   startup(): void {
-    const libraryPrefFoldersPath = AppDataPaths.LibraryFolders; // this.appDataPaths.get("libraryPrefFolders") ?? "Check LibraryManager appDataPaths"
+    const libraryPrefFoldersPath = AppDataPaths.LibraryFolders // this.appDataPaths.get("libraryPrefFolders") ?? "Check LibraryManager appDataPaths"
     fs.readFile(libraryPrefFoldersPath, (error, data: NonSharedBuffer) => {
       if (error === null) {
-        this.folderPaths = JSON.parse(data.toString("utf8"));
-        this.sanitizeFolderPaths();
+        this.folderPaths = JSON.parse(data.toString("utf8"))
+        this.sanitizeFolderPaths()
       }
     })
     fs.readFile(AppDataPaths.AlbumLibrary, (error, data) => {
       if (error === null) {
-        console.log("WOAH");
-        this.albumLibrary = new Map(Object.entries(JSON.parse(data.toString("utf8"))));
-        this.sanitizeAlbumLibrary();
+        console.log("WOAH")
+        this.albumLibrary = new Map(Object.entries(JSON.parse(data.toString("utf8"))))
+        this.sanitizeAlbumLibrary()
       }
     })
     fs.readFile(AppDataPaths.PlaylistLibrary, (error, data) => {
       if (error === null) {
-        this.playlistLibrary = new Map(Object.entries(JSON.parse(data.toString("utf8"))));
-        console.log(typeof this.playlistLibrary);
-        console.log(this.playlistLibrary)
-        this.sanitizePlaylistLibrary();
+        this.playlistLibrary = new Map(Object.entries(JSON.parse(data.toString("utf8"))))
+        this.sanitizePlaylistLibrary()
       }
     })
-    
-    
   }
   sanitizeFolderPaths(): void {
-    console.log("sanitized folder paths");
-    this.folderPaths = this.folderPaths.filter((folderPath) => {return fs.existsSync(folderPath);});
+    console.log("sanitized folder paths")
+    this.folderPaths = this.folderPaths.filter((folderPath) => {
+      return fs.existsSync(folderPath)
+    })
   }
   sanitizePlaylistLibrary(): void {
-    console.log("sanitized playlist library");
+    console.log("sanitized playlist library")
     this.playlistLibrary.forEach((playlist) => {
       playlist.songs = playlist.songs.filter((song) => {
         if (song.filePath.startsWith("file:///")) {
-          return fs.existsSync(song.filePath.slice("file:///".length)) && Object.hasOwn(this.albumLibrary, song.albumRefId);
-        } else {return true;}
-      });
+          return (
+            fs.existsSync(song.filePath.slice("file:///".length)) &&
+            Object.hasOwn(this.albumLibrary, song.albumRefId)
+          )
+        } else {
+          return true
+        }
+      })
     })
     this.playlistLibrary.forEach((playlist, key) => {
       if (playlist.songs.length == 0) {
-        this.playlistLibrary.delete(key);
+        this.playlistLibrary.delete(key)
       }
     })
   }
   sanitizeAlbumLibrary(): void {
-    console.log("sanitized album library");
+    console.log("sanitized album library")
     this.albumLibrary.forEach((album, key) => {
       Object.entries(album.discs).forEach((keyValue) => {
-        const disc = keyValue[0];
-        const songs = keyValue[1];
-        console.log(album.discs[disc].length);
-        songs.forEach((song) => {console.log(song.filePath.slice("file:///".length));})
-        album.discs[disc] = songs.filter((song) => {return fs.existsSync(song.filePath.slice("file:///".length));}) 
-        console.log(album.discs[disc].length);
+        const disc = keyValue[0]
+        const songs = keyValue[1]
+        console.log(album.discs[disc].length)
+        const filePrefixLength = "file:///".length
+        album.discs[disc] = songs.filter((song) => {
+          const decodedPath = decodeURIComponent(song.filePath).slice(filePrefixLength)
+          return fs.existsSync(decodedPath)
+        })
+        console.log(album.discs[disc].length)
         if (album.discs[disc].length == 0) {
-          delete album.discs[disc];
-          console.log("disc deleted");
+          delete album.discs[disc]
+          console.log("disc deleted")
         }
       })
-      /*album.discs.forEach((songs, disc) => {
-        album.discs.set(disc, songs.filter((song) => {fs.existsSync(song.filePath)}));
-        if (album.discs.get(disc)?.length == 0) {
-          album.discs.delete(disc);
-        }
-      })*/
     })
 
     this.albumLibrary.forEach((album, key) => {
       if (Object.keys(album.discs).length == 0) {
-        this.albumLibrary.delete(key);
+        this.albumLibrary.delete(key)
       }
     })
+    this.librarySaveAlbums();
   }
   folderListRetrieve(): string[] {
     return this.folderPaths
   }
   folderListUpdate(sourceList: string[]): void {
     this.folderPaths = sourceList
-    const libraryPrefFoldersPath = AppDataPaths.LibraryFolders; //this.appDataPaths.get("libraryPrefFolders") ?? "Check LibraryManager appDataPaths"
+    const libraryPrefFoldersPath = AppDataPaths.LibraryFolders //this.appDataPaths.get("libraryPrefFolders") ?? "Check LibraryManager appDataPaths"
     fs.writeFile(libraryPrefFoldersPath, JSON.stringify(this.folderPaths), (error) => {
       if (error !== null) {
         console.log("Issues with writing to file @ " + libraryPrefFoldersPath)
@@ -116,15 +125,50 @@ export class LibraryManager {
       }
     })
   }
-  stringCleaner(input: string): string {
-    return input.trim()
+  
+  async imageCollectionCreateKey(base64: string, format: string, key: string) {
+    const emptyResCollection: ResImageCollection = {
+      imageFound: false,
+      native: {
+        hasData: false,
+        dataUrl: ""
+      },
+      lowRes: {
+        hasData: false,
+        dataUrl: ""
+      }
+    };
+
+    // ensuring key is present
+    this.imageCollection.set(key, emptyResCollection);
+    const element = this.imageCollection.get(key);
+
+    element!.imageFound = true;
+    
+    const originalBase64 = `data:${format};base64,${base64}`;
+    const LOW_RES = 64;
+
+    element!.native.hasData = true;
+    element!.native.dataUrl = originalBase64;
+    
+    const imgBuffer = Buffer.from(base64, 'base64');
+
+    const lowResImgBuffer = await sharp(imgBuffer).resize(
+      {
+        width: LOW_RES,
+        height: LOW_RES,
+        fit: sharp.fit.contain
+      }
+    ).toBuffer();
+
+    const lowResBase64 = lowResImgBuffer.toString("base64");
+    const lowResDataUrl = `data:${format};base64,${lowResBase64}`;
+
+    element!.lowRes.hasData = true;
+    element!.lowRes.dataUrl = lowResDataUrl;
+
   }
-  folderIndexGenerateRandomId(): string {
-    /**putting this in its own function
-     * if i want to simplify the randomness
-     *  to be more efficient  */
-    return crypto.randomUUID()
-  }
+
   async jsmediatagsPromise(songPath: string): Promise<TagType> {
     return new Promise<TagType>(function (resolve, reject) {
       jsmediatags.read(songPath, {
@@ -139,162 +183,171 @@ export class LibraryManager {
   }
   async folderIndex(): Promise<void> {
     this.albumLibrary.clear()
-    console.log("folder index reached")
     let songPathSet: Set<string> = new Set<string>()
     // note: forEach allows for 3 parameters: value, index, and array
-    
+
     this.folderPaths.forEach((folder) => {
-      console.log(folder);
-      console.log(fs.readdirSync(folder, {recursive: true, withFileTypes: true}));
-      
+      console.log(folder)
+      console.log(fs.readdirSync(folder, { recursive: true, withFileTypes: true }))
+
       fs.readdirSync(folder, { recursive: true, withFileTypes: true })
 
-      .filter((file) => file.isFile() && this.audioFileFormats.has(extname(file.name)))
-      .map((file) => join(file.parentPath, file.name))
-      .forEach((value) => { 
-        console.log(value);
+        .filter((file) => file.isFile() && this.audioFileFormats.has(extname(file.name)))
+        .map((file) => join(file.parentPath, file.name))
+        .forEach((value) => {
           songPathSet.add(value)
         })
     })
     const songPathsUnique = songPathSet.values().toArray()
     let albumNameToIndex: Map<string, number> = new Map<string, number>()
     let albumList: Album[] = []
-    const perfTimestampStart = Date.now();
+    const perfTimestampStart = Date.now()
     // doing them all like this yields memory errors, need to implement batch processing just so we don't overload the servers
     // though this is incredibly more performant -- even without the separate promise optimizations done earlier
     // it processed about 100+ .flacs and a few mp3s in half a second sheeeesh
-    function sanitizedMultiSplit(delimiters:string[], defaultDelimiter:string, splitString:string):string[] {
+    function sanitizedMultiSplit(
+      delimiters: string[],
+      defaultDelimiter: string,
+      splitString: string
+    ): string[] {
       for (const delimiter of delimiters) {
-        splitString = splitString.replaceAll(delimiter, defaultDelimiter);
+        splitString = splitString.replaceAll(delimiter, defaultDelimiter)
       }
-      let unsanitizedSplit = splitString.split(defaultDelimiter).map((val) => val.trim());
-      return unsanitizedSplit.filter((value) => value.length > 0);
+      let unsanitizedSplit = splitString.split(defaultDelimiter).map((val) => val.trim())
+      return unsanitizedSplit.filter((value) => value.length > 0)
     }
-    const usedDelimiters = [",", ";", "\0", "\\", "/"];
-    const defaultDelimiter = ",";
-    const promiseBatchSize = 200;
-    console.log("batch size: ", songPathsUnique.length/promiseBatchSize)
-    for (let i = 0; i < songPathsUnique.length/promiseBatchSize; i++) {
-      console.log("new batch");
-      await Promise.all(songPathsUnique.slice((i*promiseBatchSize), Math.min(songPathsUnique.length, ((i+1)*promiseBatchSize))).map((filePath) => new Promise<void>(function (resolve, reject) {
-        parseFile(filePath, {duration: true}).then((metadata) => {
-          const albumName = metadata.common.album ?? "Download";
-          if (!albumNameToIndex.has(albumName)) {
-            const newIndex = albumList.length;
-            const newAlbum = <Album>{
-              name: albumName,
-              artists: [],
-              discs: <Discs>{},
-              albumImage: {
-                hasData: false,
-                dataUrl: ""
-              },
-              albumId: ""
-            }
-            albumList.push(newAlbum);
-            console.log("pushed album")
-            albumNameToIndex.set(albumName, newIndex);
-          }
-          const currentAlbum = albumList[albumNameToIndex.get(albumName)!];
-          if (!currentAlbum.albumImage.hasData && (metadata.common.picture && metadata.common.picture.length > 0)) {
-            const format = metadata.common.picture[0].format;
-            const base64string = Buffer.from(metadata.common.picture[0].data).toString("base64");
-            currentAlbum.albumImage.hasData = true;
-            currentAlbum.albumImage.dataUrl = `data:${format};base64,${base64string}`;
-            console.log("i'd log the picture here");
-          }
-          const discNumber = metadata.common.disk.no ?? 1
-          const discNumberString = discNumber.toString();
-          if (!Object.hasOwn(currentAlbum.discs, discNumberString)) {
-            currentAlbum.discs[discNumberString] = [];
-          }
-          const parsedPath = parse(filePath);
-          const lrcPath = join(parsedPath.dir, parsedPath.name) + ".lrc";
-         
-          const lrcAttachmentExists = fs.existsSync(lrcPath);
-          
-          let processedArtists:string[] = sanitizedMultiSplit(usedDelimiters, defaultDelimiter, (metadata.common.artists ?? ["Unknown"]).join(", "))
-          console.log(filePath);
-          const song = <Song>{
-            name: metadata.common.title ?? basename(filePath, extname(filePath)),
-            trackNo: metadata.common.track.no ?? 1,
-            artists: processedArtists,
-            albumRefId: albumName,
-            filePath: pathToFileURL(filePath).href,
-            path: filePath,
-            songId: "",
-            duration: metadata.format.duration ?? 0,
-            hasLRC: lrcAttachmentExists
-          }
+    const usedDelimiters = [",", ";", "\0", "\\", "/"]
+    const defaultDelimiter = ","
+    const promiseBatchSize = 200
+    for (let i = 0; i < songPathsUnique.length / promiseBatchSize; i++) {
+      console.log("new batch")
 
-          currentAlbum.discs[discNumberString].push(song);
-          // trying porting the later stuff and see what happens
-          resolve();
-        }).catch((error) => {console.log(error);reject();});
-      }
-      )))
+      await Promise.all(
+        songPathsUnique
+          .slice(i * promiseBatchSize, Math.min(songPathsUnique.length, (i + 1) * promiseBatchSize))
+          .map(
+            (filePath) =>
+              new Promise<void>((resolve, reject) => {
+                parseFile(filePath, { duration: true })
+                  .then((metadata) => {
+                    const albumName = metadata.common.album ?? "Download"
+                    if (!albumNameToIndex.has(albumName)) {
+                      const newIndex = albumList.length
+                      const newAlbum = <Album>{
+                        name: albumName,
+                        hasImage: false,
+                        artists: [],
+                        discs: <Discs>{},
+                        albumId: encodeURIComponent(albumName)
+                      }
+                      albumList.push(newAlbum)
+                      albumNameToIndex.set(albumName, newIndex)
+                    }
+                    const currentAlbum = albumList[albumNameToIndex.get(albumName)!]
+                    if (
+                      !currentAlbum.hasImage &&
+                      metadata.common.picture &&
+                      metadata.common.picture.length > 0
+                    ) {
+                      const format = metadata.common.picture[0].format
+                      const base64string = Buffer.from(metadata.common.picture[0].data).toString(
+                        "base64"
+                      )
+
+                      this.imageCollectionCreateKey(base64string, format, currentAlbum.albumId);
+                      currentAlbum.hasImage = true;
+                    }
+                    const discNumber = metadata.common.disk.no ?? 1
+                    const discNumberString = discNumber.toString()
+                    if (!Object.hasOwn(currentAlbum.discs, discNumberString)) {
+                      currentAlbum.discs[discNumberString] = []
+                    }
+                    const parsedPath = parse(filePath)
+                    const lrcPath = join(parsedPath.dir, parsedPath.name) + ".lrc"
+
+                    const lrcAttachmentExists = fs.existsSync(lrcPath)
+
+                    let processedArtists: string[] = sanitizedMultiSplit(
+                      usedDelimiters,
+                      defaultDelimiter,
+                      (metadata.common.artists ?? ["Unknown"]).join(", ")
+                    )
+
+                    const song = <Song>{
+                      name: metadata.common.title ?? basename(filePath, extname(filePath)),
+                      trackNo: metadata.common.track.no ?? 1,
+                      artists: processedArtists,
+                      albumRefId: encodeURIComponent(albumName),
+                      filePath: pathToFileURL(filePath).href,
+                      path: filePath,
+                      songId: "",
+                      duration: metadata.format.duration ?? 0,
+                      hasLRC: lrcAttachmentExists
+                    }
+
+                    currentAlbum.discs[discNumberString].push(song)
+                    // trying porting the later stuff and see what happens
+                    resolve()
+                  })
+                  .catch((error) => {
+                    console.log(error)
+                    reject()
+                  })
+              })
+          )
+      )
     }
-    const perfTimestampEnd = Date.now();
-    console.log("Indexing time: " + (perfTimestampEnd-perfTimestampStart).toString()+"ms");
-    
+    const perfTimestampEnd = Date.now()
+    console.log("Indexing time: " + (perfTimestampEnd - perfTimestampStart).toString() + "ms")
+
     //console.log(albumList);
-    let albumIdSet: Set<string> = new Set<string>()
     let temporaryArtistLibrary = new Map<string, Set<string>>()
-    let temporaryArtistName = new Map<string, string>();
+    let temporaryArtistName = new Map<string, string>()
     // generating unique identifier codes
     // practically very unlikely for a collision, so this is just for peace of mind lol
     for (let i = 0; i < albumList.length; i++) {
-      let newId = albumList[i].name.replaceAll("_", "__").replaceAll(" ", "_");
-      albumIdSet.add(newId)
-      albumList[i].albumId = newId
-
-      if (true) {
-        const keys = Object.keys(albumList[i].discs);
-        for (const key of keys) {
-          // using the ! here to disable undefined guard, since these keys have to be in the di
-          albumList[i].discs[key].sort((a, b) => {
-            if (a.trackNo != b.trackNo) {
-              return a.trackNo - b.trackNo; 
+      const keys = Object.keys(albumList[i].discs)
+      for (const key of keys) {
+        // using the ! here to disable undefined guard, since these keys have to be in the di
+        albumList[i].discs[key].sort((a, b) => {
+          if (a.trackNo != b.trackNo) {
+            return a.trackNo - b.trackNo
+          } else {
+            if (a.name < b.name) {
+              return -1
+            } else if (a.name > b.name) {
+              return 1
             } else {
-              if (a.name < b.name) {
-                return -1;
-              } else if (a.name > b.name) {
-                return 1;
-              } else {return 0;}
+              return 0
             }
-          })
-        }
-      }
-      
-      if (true) {
-        for (const album of albumList) {
-          let artistSet: Set<string> = new Set<string>();
-          const allAlbumDiscs = [...Object.values(album.discs)];
-          for (const disc of allAlbumDiscs) {
-            // write this better later
-            disc.forEach((song:Song) => {
-              song.albumRefId = album.albumId;
-              song.artists.forEach((artist:string) => {
-                artistSet.add(artist);
-                const artistUnderscore = artist.replaceAll(" ", "_");
-                if (!temporaryArtistName.has(artistUnderscore)) {
-                  temporaryArtistName.set(artistUnderscore, artist);
-                }
-                if (!temporaryArtistLibrary.has(artistUnderscore)) {
-                  temporaryArtistLibrary.set(artistUnderscore, new Set<string>())
-                }
-                temporaryArtistLibrary.get(artistUnderscore)?.add(album.albumId);
-              })
-          })
-          
           }
-          album.artists = artistSet.values().toArray();
-        }
+        })
       }
-
-      this.albumLibrary.set(newId, albumList[i])
+      const album = albumList[i];
+      this.albumLibrary.set(album.albumId, album);
     }
-    this.librarySaveAlbums();
+    for (const album of albumList) {
+      let artistSet: Set<string> = new Set<string>()
+      const allAlbumDiscs = [...Object.values(album.discs)]
+      for (const disc of allAlbumDiscs) {
+        // write this better later
+        disc.forEach((song: Song) => {
+          song.albumRefId = album.albumId
+          song.artists.forEach((artist: string) => {
+            artistSet.add(artist)
+            const artistKey = encodeURIComponent(artist);
+            if (!temporaryArtistName.has(artistKey)) {
+              temporaryArtistName.set(artistKey, artist)
+            }
+            if (!temporaryArtistLibrary.has(artistKey)) {
+              temporaryArtistLibrary.set(artistKey, new Set<string>())
+            }
+            temporaryArtistLibrary.get(artistKey)?.add(album.albumId)
+          })
+        })
+      }
+      album.artists = artistSet.values().toArray()
+    }
     temporaryArtistLibrary.forEach((set, key) => {
       this.artistLibrary.set(key, <Artist>{
         artistId: key,
@@ -303,31 +356,34 @@ export class LibraryManager {
       })
     })
 
-    console.log(temporaryArtistLibrary);
+
+    this.librarySaveAlbums()
   }
   libraryRetrieveAllAlbums(): Album[] {
-    return this.albumLibrary.values().toArray()
+    return this.albumLibrary.values().toArray();
   }
   libraryRetrieveAlbumById(id: string): Album | undefined {
     return this.albumLibrary.get(id)
   }
-  libraryRetrieveAlbumImageById(id: string):string | undefined {
-    return this.albumLibrary.get(id)?.albumImage.dataUrl;
+  libraryRetrieveAlbumImageById(id: string): string | undefined {
+    return this.imageCollection.get(id)?.native.dataUrl;
+    //return this.albumLibrary.get(id)?.albumImage.dataUrl
   }
-  libraryRetrieveAlbumNameById(id:string):string | undefined {
-    return this.albumLibrary.get(id)?.name;
+  libraryRetrieveAlbumImageLowResById(id: string): string | undefined {
+    return this.imageCollection.get(id)?.lowRes.dataUrl;
   }
-  libraryRetrieveArtistById(id:string):Artist | undefined {
+  libraryRetrieveAlbumNameById(id: string): string | undefined {
+    return this.albumLibrary.get(id)?.name
+  }
+  libraryRetrieveArtistById(id: string): Artist | undefined {
     return this.artistLibrary.get(id)
   }
-  libraryCreateNewPlaylist(name:string):void {
-    let playlistId = name.replaceAll("_", "__").replaceAll(" ", "_");
-    console.log(typeof playlistId);
-    console.log(typeof this.playlistLibrary);
+  libraryCreateNewPlaylist(name: string): void {
+    let playlistId = name.replaceAll("_", "__").replaceAll(" ", "_")
     while (this.playlistLibrary.has(playlistId) == true) {
-      playlistId += "0";
+      playlistId += "0"
     }
-    const playlist:Playlist = {
+    const playlist: Playlist = {
       name: name,
       albumImage: {
         hasData: false,
@@ -336,44 +392,48 @@ export class LibraryManager {
       songs: [],
       playlistId: playlistId
     }
-    this.playlistLibrary.set(playlistId, playlist);
+    this.playlistLibrary.set(playlistId, playlist)
     // persisted storage
-    this.librarySavePlaylists();
+    this.librarySavePlaylists()
   }
   librarySaveAlbums(): void {
-    const objectJSON = {};
+    const objectJSON = {}
     for (const pair of this.albumLibrary.entries()) {
-      
-      objectJSON[pair[0]] = pair[1];
+      objectJSON[pair[0]] = pair[1]
     }
-    fs.writeFileSync(AppDataPaths.AlbumLibrary, JSON.stringify(objectJSON));
-    console.log("saved albums");
+    fs.writeFileSync(AppDataPaths.AlbumLibrary, JSON.stringify(objectJSON))
+    console.log("saved albums")
   }
-  librarySavePlaylists():void {
-    const objectJSON = {};
-    for (const pair of this.albumLibrary.entries()) {
-      objectJSON[pair[0]] = pair[1];
+  librarySavePlaylists(): void {
+    const objectJSON = {}
+    for (const pair of this.playlistLibrary.entries()) {
+      objectJSON[pair[0]] = pair[1]
       // assigning value to key
     }
     console.log(objectJSON)
-    fs.writeFileSync(AppDataPaths.PlaylistLibrary, JSON.stringify(objectJSON));
-    console.log(AppDataPaths.PlaylistLibrary);
-    console.log("saved updated playlists");
+    fs.writeFileSync(AppDataPaths.PlaylistLibrary, JSON.stringify(objectJSON))
+    console.log(AppDataPaths.PlaylistLibrary)
+    console.log("saved updated playlists")
   }
-  libraryRetrieveAllPlaylists():Playlist[] {
-    return this.playlistLibrary.values().toArray();
+  libraryRetrieveAllPlaylists(): Playlist[] {
+    return this.playlistLibrary.values().toArray()
   }
-  libraryAddSongToPlaylist(song:Song, playlistId:string):void {
-    this.playlistLibrary.get(playlistId)?.songs.push(song);
-    this.librarySavePlaylists();
+  libraryAddSongToPlaylist(song: Song, playlistId: string): void {
+    this.playlistLibrary.get(playlistId)?.songs.push(song)
+    this.librarySavePlaylists()
   }
   libraryRetrieveAllPlaylistsNamesAndIds() {
-    return this.playlistLibrary.keys().map((key) => {return {
-      name: this.playlistLibrary.get(key)?.name ?? "Error",
-      key: key
-    }}).toArray();
+    return this.playlistLibrary
+      .keys()
+      .map((key) => {
+        return {
+          name: this.playlistLibrary.get(key)?.name ?? "Error",
+          key: key
+        }
+      })
+      .toArray()
   }
-  libraryRetrievePlaylistById(id:string) {
-    return this.playlistLibrary.get(id);
+  libraryRetrievePlaylistById(id: string) {
+    return this.playlistLibrary.get(id)
   }
 }

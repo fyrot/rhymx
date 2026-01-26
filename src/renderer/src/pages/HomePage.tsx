@@ -17,9 +17,9 @@ export default function HomePage() {
           <PlaylistCarousel />
         </div>
         <br />
-        <div onClick={navigateToPreferences} className="opacity-50 hover:opacity-100 rounded-full inline-flex bg-black transition-all duration-300 ease-out gap-2 ml-2 flex-row border-2 p-2 items-center justify-center">
+        <div onClick={navigateToPreferences} className="opacity-50 hover:opacity-100 rounded-full inline-flex bg-black transition-all duration-300 ease-out gap-2 ml-4 flex-row border-2 p-2 items-center justify-center">
           <LuSettings className="text-xl" />
-          <h1>Manage Preferences</h1>
+          <h1>Preferences</h1>
         </div>
         <br /> 
         <br />

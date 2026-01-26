@@ -11,6 +11,7 @@ import * as fs from "fs";
 import AdmZip, * as admzip from "adm-zip";
 import plugin from 'tailwindcss';
 import { PluginFieldSchema, PluginSchema } from './bgutils/pluginInformation';
+import { createRequire } from 'module';
 app.commandLine.appendSwitch("enable-features", "OverlayScrollbar")
 
 class PluginEmitter extends EventEmitter {}
@@ -26,7 +27,8 @@ libraryManager.startup();
 let globalMainWindow:BrowserWindow; 
 
 pluginsGetSourceFolders();
-//pluginsRegisterPluginEvents();
+
+pluginsRegisterPluginEvents(); // this was commented out, potentially for testing (needs revisiting: V)
 function closeWindow(event, shouldClose):void {
   const window = BrowserWindow.fromWebContents(event.sender);
   window?.close();
@@ -39,12 +41,35 @@ function queueNotifyAudioBar() {
   if (globalMainWindow !== undefined) {
     globalMainWindow.webContents.send("queue:notifyAudioBar");
   }
-
+  const trackInformation = {
+    song: queueManager.retrieveCurrent(),
+    position: 0,
+    playing: true
+  }
   pluginEmitter.emit("pluginEvents:currentlyPlayingChanged", queueManager.retrieveCurrent());
+  pluginEmitter.emit("pluginEvents:currentlyPlayingToggled", trackInformation);
 }
 function queueNotifySkipTracks(event, tracksSkipped:number) {
   queueManager.skipTracks(tracksSkipped);
   queueNotifyAudioBar();
+}
+
+function queueNotifyTrackSeeked(event, currentSong:Song, position: number, playing: boolean) {
+  const trackInformation = {
+    song: currentSong,
+    position: position,
+    playing: playing
+  }
+  pluginEmitter.emit("pluginEvents:currentlyPlayingSeeked", trackInformation);
+}
+
+function queueNotifyTrackToggled(event, currentSong:Song, position: number, playing:boolean) {
+  const trackInformation = {
+    song: currentSong,
+    position: position,
+    playing: playing
+  }
+  pluginEmitter.emit("pluginEvents:currentlyPlayingToggled", trackInformation);
 }
 
 function queueUpdateQueueAndIndex(event, newQueue:AudioBarSong[] | null, newIndex:number):void {
@@ -140,6 +165,9 @@ async function libraryRetrieveAlbumImageById(event, id):Promise<string> {
   console.log("id", id)
   return libraryManager.libraryRetrieveAlbumImageById(id) ?? "";
 }
+async function libraryRetrieveAlbumImageLowResById(event, id): Promise<string> {
+  return libraryManager.libraryRetrieveAlbumImageLowResById(id) ?? "";
+}
 async function libraryRetrieveAlbumNameById(event, id):Promise<string> {
   console.log("retrieving name w/ id", id);
   return libraryManager.libraryRetrieveAlbumNameById(id) ?? "blah";
@@ -182,10 +210,11 @@ function pluginsRegisterPluginEvents() {
   console.log("registering", pluginFolders)
   for (const folderPath of pluginFolders) {
     const pluginFilePath = join(folderPath, "plugin.js");
-    
     if (fs.existsSync(pluginFilePath)) {
+
       const events = require(pluginFilePath);
-      for (const eventPair of events.events) {
+      console.log(events);
+      for (const eventPair of events.default.events) {
         console.log("registered", pluginFilePath);
         pluginEmitter.on(eventPair.eventName, (data) => {
           eventPair.callback(data);
@@ -369,6 +398,7 @@ app.whenReady().then(() => {
   ipcMain.handle("libraryRetrieve:allAlbums", libraryRetrieveAllAlbums);
   ipcMain.handle("libraryRetrieve:albumById", libraryRetrieveAlbumById);
   ipcMain.handle("libraryRetrieve:albumImageById", libraryRetrieveAlbumImageById);
+  ipcMain.handle("libraryRetrieve:albumImageLowResById", libraryRetrieveAlbumImageLowResById)
   ipcMain.handle("libraryRetrieve:albumNameById", libraryRetrieveAlbumNameById);
   ipcMain.handle("libraryRetrieve:artistById", libraryRetrieveArtistById);
   ipcMain.on("library:createNewPlaylist", libraryCreateNewPlaylist);
@@ -383,6 +413,8 @@ app.whenReady().then(() => {
   ipcMain.handle("queue:retrieveQueue", queueRetrieveQueue);
   ipcMain.on("queue:notifyTrackEnded", queueNotifyTrackEnded);
   ipcMain.on("queue:notifySkipTracks", queueNotifySkipTracks);
+  ipcMain.on("queue:notifyTrackSeeked", queueNotifyTrackSeeked);
+  ipcMain.on("queue:notifyTrackToggled", queueNotifyTrackToggled)
   ipcMain.on("queue:updateLoop", queueUpdateLoop);
   ipcMain.handle("queue:updateShuffle", queueUpdateShuffle);
   ipcMain.on("currentlyPlaying:updateVisibility", currentlyPlayingUpdateVisibility);

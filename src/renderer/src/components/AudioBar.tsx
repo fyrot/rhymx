@@ -18,6 +18,7 @@ import AutoSizer from "react-virtualized-auto-sizer"
 const AudioBarQueueTile = lazy(() => import("./AudioBarQueueTile"))
 
 function base64ToBlob(base64string:string) {
+  console.log(base64string.slice(0,40));
   const byteData = atob(base64string.split(",")[1]);
   const arrayBuffer= new Uint8Array(byteData.length);
   for (let i = 0; i < byteData.length; i++) {
@@ -375,8 +376,8 @@ const AudioBar = () => {
       <div className={`transition-all flex bg-neutral-800 flex-col ${showCurrentlyPlayingScreen ? "h-[calc(100vh-5rem-max(2px,.125rem))]" : "h-0"}`}>
         <NavigationBarSpacer accentGradient={false} />
         <div className="grow overflow-hidden flex-shrink flex px-4 pb-3 pt-0 flex-row">
-          <div className={`grow-[2] basis-0 overflow-hidden flex min-w-0 rounded-2xl`} style={{ background: `url(${currentImage})`, backgroundSize: "100% 100%", backgroundPosition: "center", backgroundAttachment: "fixed", backgroundRepeat: "space" }}>
-            <div ref={lyricDisplayContainer} className={`grow  rounded-2xl p-2 flex flex-col audio-bar-currently-playing-image-blur items-center overflow-y-auto no-scrollbar ${!songInformation?.hasLRC ? "justify-center" : ""}`}>
+          <div className={`md:grow-[2] basis-0 overflow-hidden flex min-w-0 rounded-2xl`} style={{ background: `url(${currentImage})`, backgroundSize: "100% 100%", backgroundPosition: "center", backgroundAttachment: "fixed", backgroundRepeat: "space" }}>
+            <div ref={lyricDisplayContainer} className={`grow rounded-2xl p-2 flex flex-col audio-bar-currently-playing-image-blur items-center overflow-y-auto no-scrollbar ${!songInformation?.hasLRC ? "justify-center" : ""}`}>
               <br />
               {!songInformation?.hasLRC ? <div
                 className={`w-[min(40vw,40vh,24rem)] h-[min(40vw,40vh,24rem)]  flex-shrink-0 rounded-xl shadow-2xl drop-shadow-2xl`}
@@ -416,8 +417,8 @@ const AudioBar = () => {
                 </div>
                 <div className="mt-1 flex grow flex-col overflow-y-scroll">
                   
-                  { currentQueue?.map((absong, index) => (<><AudioBarQueueTile song={absong} index={index} highlight={currentQueueIndex == index} /><hr className="opacity-25" /></>))
-                  }
+                  { /*currentQueue?.map((absong, index) => (<><AudioBarQueueTile song={absong} index={index} highlight={currentQueueIndex == index} /><hr className="opacity-25" /></>))
+                  */}
                   {/*<AutoSizer>
                     {({ height, width }) => (
                       <ReactWindowList itemCount={currentQueue?.length ?? 0} height={height} width={width} itemSize={remSize * 4.5}>
@@ -491,12 +492,13 @@ const AudioBar = () => {
           <audio
             ref={audioElement}
             onSeeked={() => {
+              window.electronAPI.queueNotifyTrackSeeked(songInformation!, audioElement.current?.currentTime ?? 0, !audioElement.current?.paused);
               //updateProgressBar(0, true)
             }}
             onTimeUpdate={() => { }}
             onEnded={trackEnded}
-            onPlay={() => { updatePlaying(true); updateProgressBar(audioElement.current?.currentTime ?? 0, true) }}
-            onPause={() => { updatePlaying(false); updateProgressBar(audioElement.current?.currentTime ?? 0, false) }}
+            onPlay={() => { updatePlaying(true); updateProgressBar(audioElement.current?.currentTime ?? 0, true); window.electronAPI.queueNotifyTrackToggled(songInformation!, audioElement.current?.currentTime ?? 0, true); }}
+            onPause={() => { updatePlaying(false); updateProgressBar(audioElement.current?.currentTime ?? 0, false); window.electronAPI.queueNotifyTrackToggled(songInformation!, audioElement.current?.currentTime ?? 0, false); }}
             onCanPlay={() => {
               playTrack()
             }}

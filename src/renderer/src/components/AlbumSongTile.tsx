@@ -44,10 +44,21 @@ const AlbumSongTile = ({ song, trackNo, playFunction}: { song: Song; trackNo: nu
     
     const album = await window.electronAPI.libraryRetrieveAlbumById(song.albumRefId);
     console.log("adding to queue")
+    
+    //const albumImage = await window.electronAPI.libraryRetrieveAlbumImageById(song.albumRefId);
+    const albumImage = await window.electronAPI.libraryRetrieveAlbumImageLowResById(song.albumRefId);
+    
+    //console.log("Old: %d \n New: %d", albumImage2.length, albumImage.length);
+    
+    console.log(albumImage.slice(0,20));
     if (album) {
+      
       window.electronAPI.queueUpdateAddToQueue({
         song: song,
-        albumImage: album.albumImage,
+        albumImage: {
+          hasData: true,
+          dataUrl: albumImage
+        },
         albumName: album.name,
         identifier: QueueIdentifier.generateIdentifier()
       })

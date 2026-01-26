@@ -14,12 +14,9 @@ export interface Discs {
 }
 export interface Album {
   name: string,
+  hasImage: boolean,
   artists: string[],
   discs: Discs,
-  albumImage: {
-    hasData: boolean,
-    dataUrl: string
-  },
   albumId: string
 }
 export interface Playlist {
@@ -45,3 +42,17 @@ export interface AudioBarSong {
   albumName: string,
   identifier: string
 }
+export interface NativeResImage {
+  hasData: boolean,
+  dataUrl: string
+}
+export interface LowResImage {
+  hasData: boolean,
+  dataUrl: string
+}
+export interface ResImageCollection {
+  imageFound: boolean,
+  native: NativeResImage,
+  lowRes: LowResImage
+}
+

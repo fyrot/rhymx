@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, FormEvent } from "react";
 import NavigationBarSpacer from "@renderer/components/NavigationBarSpacer"
-import { LuBookOpenText, LuFile, LuLoader, LuSaveAll, LuX } from "react-icons/lu"
+import { LuBookOpenText, LuFile, LuLoader, LuPlus, LuSaveAll, LuX } from "react-icons/lu"
 import { PluginSchema } from "src/main/bgutils/pluginInformation";
 import * as Dialog from "@radix-ui/react-dialog";
 import { queueToast } from "@renderer/helper/QueueToast";
@@ -95,9 +95,9 @@ export default function PreferencesPluginsPage() {
               }
               <br />
               <div className="flex flex-row">
-                <div onClick={() => {window.electronAPI.pluginsAddSources();}} className="border-white bg-transparent hover:bg-neutral-900 border-2 px-4 py-3 transition-all duration-300 ease-out items-center rounded-full flex-row inline-flex opacity-50 hover:opacity-100">
-                  <LuFile className="text-2xl" />
-                  <h1 className="text-sm pl-2">Add Plugins</h1>
+                <div onClick={() => {window.electronAPI.pluginsAddSources();}} className="border-white bg-black hover:bg-neutral-900 border-2 px-4 py-3 transition-all duration-300 ease-out items-center rounded-full flex-row inline-flex opacity-50 hover:opacity-100">
+                  <LuPlus className="text-2xl" />
+                  <h1 className="text-sm pl-2">Add</h1>
                 </div>
                 
               </div>

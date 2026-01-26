@@ -7,6 +7,7 @@ export default function LibraryPage() {
   useEffect(() => {
     let allAlbumData:Album[];
     window.electronAPI.libraryRetrieveAllAlbums().then((value) => {
+      console.log("library retrieve all albums");
       allAlbumData = value;
       updateAllAlbumsCarouselContent(value);
       console.log(value)

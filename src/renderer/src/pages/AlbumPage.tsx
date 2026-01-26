@@ -8,10 +8,12 @@ import { Album, Song, AudioBarSong, Discs } from "src/main/bgutils/songInformati
 export default function AlbumPage() {
   const [abc, setAbc] = useSearchParams()
   const [album, updateAlbum] = useState<Album>()
+  const [albumImage, updateAlbumImage] = useState<string>();
+  
   useLayoutEffect(() => {
     // using ! operator here because it should be in there
     window.electronAPI
-      .libraryRetrieveAlbumById(abc.get("id")!)
+      .libraryRetrieveAlbumById(encodeURIComponent(abc.get("id")!))
       .then((val) => {
         updateAlbum(val)
         console.log(val);
@@ -20,6 +22,15 @@ export default function AlbumPage() {
       .catch((error) => {
         console.log(error)
       })
+    window.electronAPI
+      .libraryRetrieveAlbumImageById(encodeURIComponent(abc.get("id")!))
+      .then((val) => {
+        updateAlbumImage(val);
+      })
+      .catch((error) => {
+        console.log(error);
+      })
+
   }, [abc])
 
   const playAlbum = async (song:Song) => {
@@ -34,7 +45,10 @@ export default function AlbumPage() {
         }
         audioBarQueue.push({
           song: item,
-          albumImage: album!.albumImage,
+          albumImage: {
+            hasData: true,
+            dataUrl: albumImage!
+          },
           albumName: album!.name,
           identifier: QueueIdentifier.generateIdentifier()
 
@@ -68,7 +82,7 @@ export default function AlbumPage() {
             <div
               className="w-full relative inline-flex"
               style={{
-                backgroundImage: `url(${album?.albumImage.dataUrl})`,
+                backgroundImage: `url(${albumImage})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center"
               }}
@@ -79,7 +93,7 @@ export default function AlbumPage() {
                   <div
                     className="md:w-[min(40vh,20rem)] md:h-[min(40vh,20rem)] flex-shrink-0 rounded-xl shadow-2xl drop-shadow-2xl -mb-16"
                     style={{
-                      backgroundImage: `url(${album?.albumImage.dataUrl})`,
+                      backgroundImage: `url(${albumImage})`,
                       backgroundSize: "cover",
                       backgroundPosition: "center"
                     }}
@@ -93,6 +107,7 @@ export default function AlbumPage() {
               </div>
             </div>
             <div className="h-16">
+              
               <h1 className="md:pl-[calc(2rem+min(40vh,20rem)+1rem)] opacity-70 text-left leading-loose text-nowrap text-ellipsis w-full overflow-x-hidden">
                 {album?.artists.join(", ")}
               </h1>
@@ -103,7 +118,7 @@ export default function AlbumPage() {
             <div
               className="w-full relative inline-flex "
               style={{
-                backgroundImage: `url(${album?.albumImage.dataUrl})`,
+                backgroundImage: `url(${albumImage})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center"
               }}
@@ -114,7 +129,7 @@ export default function AlbumPage() {
                   <div
                     className="w-[min(30vh,20rem)] h-[min(30vh,20rem)] flex-shrink-0 rounded-xl shadow-2xl drop-shadow-2xl"
                     style={{
-                      backgroundImage: `url(${album?.albumImage.dataUrl})`,
+                      backgroundImage: `url(${albumImage})`,
                       backgroundSize: "cover",
                       backgroundPosition: "center"
                     }}
